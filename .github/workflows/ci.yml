@@ -99,16 +99,24 @@ jobs:
             kill "$server_pid" 2>/dev/null || true
           }
           trap cleanup EXIT
+          ready_status="000"
           for attempt in $(seq 1 60); do
-            if curl --fail --silent \
-              http://127.0.0.1:3000/api/v1/ready > /dev/null; then
+            ready_status="$(curl --silent --show-error --max-time 2 \
+              --output /tmp/nodezuno-ready.json \
+              --write-out '%{http_code}' \
+              http://127.0.0.1:3000/api/v1/ready || true)"
+            if [ "$ready_status" = "200" ]; then
               break
             fi
             if ! kill -0 "$server_pid" 2>/dev/null; then
+              printf 'Readiness endpoint returned HTTP %s before the server exited.\n' "$ready_status"
+              cat /tmp/nodezuno-ready.json 2>/dev/null || true
               cat /tmp/nodezuno-dev.log
               exit 1
             fi
             if [ "$attempt" = "60" ]; then
+              printf 'Timed out waiting for readiness; last HTTP status: %s. Response body:\n' "$ready_status"
+              cat /tmp/nodezuno-ready.json 2>/dev/null || true
               cat /tmp/nodezuno-dev.log
               exit 1
             fi
