@@ -97,9 +97,8 @@ for script in \
   migrate-sqlite.mjs \
   process-notification-outbox.mjs \
   process-stablecoin-payments.mjs \
-  preflight-control-plane.mjs \
+  preflight-review-application.mjs \
   preflight-stablecoin-payments.mjs \
-  preflight-node-attachments.mjs \
   restore-sqlite.mjs; do
   cp "$NODEZUNO_PROJECT_ROOT/scripts/$script" \
     "$staging_directory/scripts/$script"
@@ -110,21 +109,12 @@ cp "$NODEZUNO_PROJECT_ROOT/lib/review-targets.ts" \
   "$staging_directory/lib/review-targets.ts"
 cp "$NODEZUNO_PROJECT_ROOT/lib/review-policy.ts" \
   "$staging_directory/lib/review-policy.ts"
-for server_module in \
-  crypto.ts \
-  ethereum-rpc.ts \
-  http.ts \
-  rpc-node-preflight.ts \
-  runtime-config.ts; do
-  cp "$NODEZUNO_PROJECT_ROOT/lib/server/$server_module" \
-    "$staging_directory/lib/server/$server_module"
-done
 chmod -R go-rwx "$staging_directory"
 
-nodezuno_note "Validating control-plane configuration and reporting public indexing state."
+nodezuno_note "Validating the release-review application configuration."
 (
   cd "$staging_directory"
-  "$node_binary" scripts/preflight-control-plane.mjs
+  "$node_binary" scripts/preflight-review-application.mjs
 )
 
 if [[ "${NODEZUNO_STABLECOIN_PAYMENT_MODE:-disabled}" = "ethereum_mainnet" ]]; then
@@ -132,14 +122,6 @@ if [[ "${NODEZUNO_STABLECOIN_PAYMENT_MODE:-disabled}" = "ethereum_mainnet" ]]; t
   (
     cd "$staging_directory"
     "$node_binary" scripts/preflight-stablecoin-payments.mjs
-  )
-fi
-
-if [[ -n "${NODEZUNO_RPC_UPSTREAMS_JSON:-}" ]]; then
-  nodezuno_note "Verifying the configured Ethereum attachment before release."
-  (
-    cd "$staging_directory"
-    "$node_binary" scripts/preflight-node-attachments.mjs ethereum
   )
 fi
 

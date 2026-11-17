@@ -1,22 +1,14 @@
 "use client";
 
 import { type FormEvent, useRef, useState } from "react";
-import { reviewPriceLabels } from "@/lib/review-policy";
 import type { SubmissionKind } from "@/lib/server/contracts";
 import { solveAbuseChallenge } from "@/lib/client/abuse-challenge";
 
 export type SubmissionFormVariant =
-  | "upgrade"
   | "general"
-  | "sales"
-  | "chain"
-  | "workspace"
-  | "support"
-  | "startup"
   | "press"
   | "career"
-  | "security"
-  | "event";
+  | "security";
 
 const submissionFormConfig: Record<
   SubmissionFormVariant,
@@ -42,81 +34,6 @@ const submissionFormConfig: Record<
     placeholder:
       "Share the public context, organization, topic, desired next step, and any relevant deadline. Do not include secrets, confidential source, credentials, or exploit material.",
     successTitle: "Thanks for getting in touch.",
-    contact: "info@nodezuno.com",
-  },
-  upgrade: {
-    kind: "sales",
-    kicker: "Start a release security review",
-    title: "Tell us about the release you plan to deploy.",
-    intro:
-      `Share the audited or professionally reviewed baseline, planned release, target ecosystem and network, expected execution date, and the financial or protocol rules that must remain true. Every supported release review costs ${reviewPriceLabels.total}, whether the target is EVM or non-EVM. A valid bounded form creates the fixed service order immediately so you can accept the terms and pay the scheduling deposit.`,
-    question: "What is changing, and when could it execute?",
-    placeholder:
-      "Include repository or governance links, audited or reviewed baseline, proposed revision or execution action, upgrade mechanism, target chain, expected execution date, affected contracts, programs, or modules, previous review, and the rules that must hold. Do not include private keys, secrets, or credentials.",
-    successTitle: "Your review request was received.",
-    contact: "info@nodezuno.com",
-    securityNote:
-      "This form accepts scoping information only. Do not send private repositories, exploit material, credentials, keys, or production secrets until a restricted review channel and written scope are established.",
-  },
-  chain: {
-    kind: "startup_program",
-    kicker: "Chain launch intake",
-    title: "Turn your network plan into verifiable milestones.",
-    intro:
-      "Share the protocol, stack, current stage, launch dates, infrastructure surfaces, and grant or RFP context. Nodezuno will use the stored brief to prepare a responsibility map and evidence checklist.",
-    question: "What must exist for this network to launch well?",
-    placeholder:
-      "Include repository and website links, L1, L2, rollup, or appchain type, client stack, current stage, testnet and mainnet targets, node roles, RPC, explorer, indexing, snapshots, regions, expected traffic, existing operators, grant or RFP link, and decision date.",
-    successTitle: "Your network brief is stored.",
-    contact: "info@nodezuno.com",
-    securityNote:
-      "Do not include private keys, seed phrases, cloud credentials, or private endpoints. A submission is not a grant award, deployment, or commercial commitment.",
-  },
-  sales: {
-    kind: "sales",
-    kicker: "Architecture conversation",
-    title: "Tell us about the critical path.",
-    intro:
-      "Share the workload, launch stage, networks, and operational requirements. We’ll route it to the right infrastructure specialist.",
-    question: "What cannot fail?",
-    placeholder:
-      "Describe the workflow, current stack, scale, and operational requirements.",
-    successTitle: "Your architecture request is stored.",
-    contact: "info@nodezuno.com",
-  },
-  workspace: {
-    kind: "workspace_access",
-    kicker: "Private platform access",
-    title: "Request a Nodezuno workspace.",
-    intro:
-      "Join the design-partner queue and help shape the platform before public access.",
-    question: "What are you building?",
-    placeholder: "Tell us about the product, chains, and launch timeline.",
-    successTitle: "Your access request is stored.",
-    contact: "info@nodezuno.com",
-  },
-  support: {
-    kind: "support",
-    kicker: "Developer support",
-    title: "Bring us the blocker.",
-    intro:
-      "Send the context an infrastructure engineer needs to understand your integration or architecture question.",
-    question: "How can we help?",
-    placeholder:
-      "Include the product surface, expected behavior, observed behavior, and urgency. Never include secrets or private keys.",
-    successTitle: "Your support request is stored.",
-    contact: "info@nodezuno.com",
-  },
-  startup: {
-    kind: "startup_program",
-    kicker: "Startup program",
-    title: "Apply for the infrastructure head start.",
-    intro:
-      "Tell us about the team, product, stage, launch window, and where architecture support would have the greatest effect.",
-    question: "Why Nodezuno, and why now?",
-    placeholder:
-      "Describe the product, traction or design-partner stage, technical challenge, and next milestone.",
-    successTitle: "Your startup application is stored.",
     contact: "info@nodezuno.com",
   },
   press: {
@@ -156,18 +73,6 @@ const submissionFormConfig: Record<
     contact: "info@nodezuno.com",
     securityNote:
       "This intake intentionally limits technical detail. Nodezuno will establish a restricted channel before accepting sensitive reproduction material.",
-  },
-  event: {
-    kind: "event_interest",
-    kicker: "Events",
-    title: "Register your interest.",
-    intro:
-      "Tell us which operator topics, formats, and locations would make a Nodezuno session valuable.",
-    question: "What should the session cover?",
-    placeholder:
-      "Share the topic, preferred format or city, and the questions you want practitioners to answer.",
-    successTitle: "Your event interest is stored.",
-    contact: "info@nodezuno.com",
   },
 };
 

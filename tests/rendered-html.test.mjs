@@ -427,7 +427,6 @@ function escapeRegularExpression(value) {
 
 test("API guards and image optimizer fail safely", async () => {
   const [
-    gas,
     invalidSubmission,
     crossOrigin,
     invalidChallenge,
@@ -435,19 +434,6 @@ test("API guards and image optimizer fail safely", async () => {
     missingDb,
   ] =
     await Promise.all([
-      render("/api/v1/gas-estimate", {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          "content-type": "application/json",
-          origin: "http://localhost",
-        },
-        body: JSON.stringify({
-          gasUnits: "21000",
-          gwei: "2.5",
-          assetPrice: "3500",
-        }),
-      }),
       render("/api/v1/submissions", {
         method: "POST",
         headers: {
@@ -477,8 +463,6 @@ test("API guards and image optimizer fail safely", async () => {
       }),
     ]);
 
-  assert.equal(gas.status, 200);
-  assert.equal((await gas.json()).data.fiatUsd, "0.18375");
   assert.equal(invalidSubmission.status, 403);
   assert.equal((await invalidSubmission.clone().json()).code, "challenge_required");
   assert.equal(crossOrigin.status, 403);

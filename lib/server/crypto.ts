@@ -77,33 +77,6 @@ export async function reviewCapabilityHash(
   );
 }
 
-export async function developerApiKeyHash(value: string): Promise<string> {
-  const secret = normalizedRuntimeSecret(
-    await runtimeEnvironmentValue("API_KEY_PEPPER"),
-  );
-  if (!secret) {
-    throw new HttpProblem(
-      503,
-      "api_key_security_unavailable",
-      "API key security is temporarily unavailable.",
-    );
-  }
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  return toHex(
-    await crypto.subtle.sign(
-      "HMAC",
-      key,
-      encoder.encode(`developer-api-key\u0000${value}`),
-    ),
-  );
-}
-
 export function stableStringify(value: Record<string, unknown>): string {
   return JSON.stringify(
     Object.fromEntries(

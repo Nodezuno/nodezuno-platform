@@ -1,12 +1,8 @@
 export const submissionKinds = [
   "sales",
-  "workspace_access",
-  "support",
-  "startup_program",
   "press",
   "career_interest",
   "security_contact",
-  "event_interest",
 ] as const;
 
 export type SubmissionKind = (typeof submissionKinds)[number];

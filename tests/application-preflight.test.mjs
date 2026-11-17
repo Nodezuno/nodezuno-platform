@@ -5,7 +5,6 @@ import test from "node:test";
 const repositoryRoot = new URL("../", import.meta.url);
 const secretValues = {
   RATE_LIMIT_SECRET: "rate-7c4e91b2f8a563d09e17c42bQx42",
-  API_KEY_PEPPER: "pepper-1a8f73d4c29e650b7d91e36cZy",
   BETTER_AUTH_SECRET: "auth-6e2b94f1c8073a5d29e14f68Lm91",
   REVIEW_CAPABILITY_SECRET: "review-8c5a31d7f0e426b9a53c18d2Qx",
   NODEZUNO_ORIGIN_SECRET: "origin-93f0a76d1b4c825e7f6a30d1Vk",
@@ -14,7 +13,7 @@ const secretValues = {
 function runPreflight(overrides = {}) {
   return spawnSync(
     process.execPath,
-    ["scripts/preflight-control-plane.mjs"],
+    ["scripts/preflight-review-application.mjs"],
     {
       cwd: repositoryRoot,
       encoding: "utf8",
@@ -65,7 +64,7 @@ function runPreflight(overrides = {}) {
   );
 }
 
-test("control-plane preflight reports only named boolean checks", () => {
+test("application preflight reports only named boolean checks", () => {
   const result = runPreflight();
   assert.equal(result.status, 0, result.stderr);
   const payload = JSON.parse(result.stdout);
@@ -85,7 +84,7 @@ test("control-plane preflight reports only named boolean checks", () => {
   }
 });
 
-test("control-plane preflight accepts a private deployment with payments disabled", () => {
+test("application preflight accepts a private deployment with payments disabled", () => {
   const result = runPreflight({
     NODEZUNO_LEGAL_LAUNCH_APPROVED: "false",
     NODEZUNO_STABLECOIN_PAYMENT_MODE: "disabled",
@@ -99,7 +98,7 @@ test("control-plane preflight accepts a private deployment with payments disable
   assert.equal(payload.publicIndexing.state, "disabled");
 });
 
-test("control-plane preflight gates enabled Ethereum payment verification", () => {
+test("application preflight gates enabled Ethereum payment verification", () => {
   for (const overrides of [
     { NODEZUNO_LEGAL_LAUNCH_APPROVED: "false" },
     { NODEZUNO_ETHEREUM_RPC_ENDPOINTS_JSON: "[]" },
@@ -124,7 +123,7 @@ test("control-plane preflight gates enabled Ethereum payment verification", () =
   }
 });
 
-test("control-plane preflight gates public indexing on legal launch approval", () => {
+test("application preflight gates public indexing on legal launch approval", () => {
   const blocked = runPreflight({
     NODEZUNO_LEGAL_LAUNCH_APPROVED: "false",
     NODEZUNO_PUBLIC_INDEXING: "true",
@@ -150,9 +149,9 @@ test("control-plane preflight gates public indexing on legal launch approval", (
   assert.equal(invalidPayload.publicIndexing.state, "invalid");
 });
 
-test("control-plane preflight fails closed for incoherent configuration", () => {
+test("application preflight fails closed for incoherent configuration", () => {
   const result = runPreflight({
-    API_KEY_PEPPER: secretValues.RATE_LIMIT_SECRET,
+    NODEZUNO_ORIGIN_SECRET: secretValues.RATE_LIMIT_SECRET,
     BETTER_AUTH_URL: "https://wrong.example",
   });
   assert.equal(result.status, 1);
@@ -162,13 +161,13 @@ test("control-plane preflight fails closed for incoherent configuration", () => 
   assert.equal(payload.checks.accountAuthentication, false);
 });
 
-test("control-plane preflight requires the public origin to match the deployment domain", () => {
+test("application preflight requires the public origin to match the deployment domain", () => {
   const result = runPreflight({ NODEZUNO_DOMAIN: "wrong.nodezuno.com" });
   assert.equal(result.status, 1);
   assert.equal(JSON.parse(result.stdout).checks.publicOrigin, false);
 });
 
-test("control-plane preflight accepts the persistent SQLite driver", () => {
+test("application preflight accepts the persistent SQLite driver", () => {
   const result = runPreflight({
     NODEZUNO_INGRESS_MODE: "direct",
     NODEZUNO_ORIGIN_SECRET: "",

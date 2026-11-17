@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       "Nodezuno compares a planned smart contract or protocol release with the version covered by a prior audit or professional security review, then delivers findings, reproducible evidence where feasible, and a reviewer-signed recommendation.",
     applicationName: "Nodezuno",
-    category: "developer tools",
+    category: "smart contract security",
     creator: "Nodezuno",
     keywords: [
       "smart contract release security review",

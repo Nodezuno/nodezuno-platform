@@ -8,11 +8,8 @@ import { FounderExperience } from "./founder-experience";
 import { LegalExperience } from "./legal-experience";
 import { CommercialPage } from "./commercial-page";
 import { StatusExperience } from "./detail-status-experience";
-import { ChainDirectoryExperience } from "./detail-directory-experience";
-import { GasCalculatorExperience } from "./detail-gas-calculator";
 import { ContactExperience, type SubmissionFormVariant } from "./detail-contact-experience";
 import { NewsletterExperience } from "./detail-newsletter-experience";
-import { AiExplorerExperience, AiOperationsExperience } from "./detail-ai-previews";
 
 // Client tools keep SSR enabled so their initial text and anchors are available
 // before hydration. Static founder/legal content stays in the server graph.
@@ -58,11 +55,8 @@ function DetailVisual({ page }: { page: DetailPageData }) {
 }
 
 const breadcrumbLabels: Record<string, string> = {
-  "ai-explorer": "AI Explorer",
-  "ai-operations": "AI Operations",
   "how-it-works": "How it works",
   "press-kit": "Press kit",
-  "rpc-api": "RPC API",
   product: "Release review",
 };
 
@@ -77,10 +71,8 @@ function breadcrumbLabel(segment: string) {
 }
 
 export function DetailPage({
-  initialChains,
   page,
 }: {
-  initialChains: typeof import("@/lib/site-data").chainDirectory;
   page: DetailPageData;
 }) {
   const pathParts = page.path.split("/");
@@ -89,18 +81,10 @@ export function DetailPage({
   const formVariantByPath: Partial<
     Record<string, SubmissionFormVariant>
   > = {
-    "contact/upgrade-assurance": "upgrade",
     "company/contact": "general",
-    "contact/chain-launch": "upgrade",
-    "developers/signup": "workspace",
-    "developers/support": "support",
-    "community/startup-program": "startup",
     "contact/press": "press",
     "company/careers": "career",
-    "community/offchain-bounties": "security",
-    "community/onchain-bounties": "security",
     "security/responsible-disclosure": "security",
-    "community/events": "event",
   };
   const formVariant = formVariantByPath[page.path];
   const isDocumentation =
@@ -110,8 +94,6 @@ export function DetailPage({
   const isWhitepaper = page.path === "whitepaper";
   const isFaq = page.path === "faq";
   const isFounder = page.path === "company/about";
-  const isAiExplorer = page.path === "products/ai-explorer";
-  const isAiOperations = page.path === "products/ai-operations";
   const isGeneralContact = page.path === "company/contact";
   const isUpgradeAssurance =
     page.path === "product" ||
@@ -121,9 +103,6 @@ export function DetailPage({
     page.path === "methodology" ||
     page.path === "security" ||
     page.path === "pricing";
-  const isEthereumRpcBeta = page.path === "products/rpc-api";
-  const isPulseBeta = page.path === "products/pulse";
-  const isImplementedRpcBeta = isEthereumRpcBeta || isPulseBeta;
   const capabilitySectionCopy = page.path.startsWith("product")
     ? {
         kicker: "What the review covers",
@@ -198,8 +177,6 @@ export function DetailPage({
                 : "What happens from start to finish.";
   const hasStandaloneExperience =
     isDocumentation || isWhitepaper || isFaq || isFounder || page.kind === "pricing";
-  const isProposedProductPlane =
-    page.path.startsWith("products/") && !isImplementedRpcBeta;
   const specialized =
     isDocumentation ? (
       <DocumentationExperience />
@@ -215,16 +192,8 @@ export function DetailPage({
       <LegalExperience path={page.path} />
     ) : page.kind === "status" ? (
       <StatusExperience />
-    ) : page.kind === "directory" ? (
-      <ChainDirectoryExperience initialChains={initialChains} />
-    ) : page.kind === "calculator" ? (
-      <GasCalculatorExperience />
     ) : page.path === "community/newsletter" ? (
       <NewsletterExperience />
-    ) : isAiOperations ? (
-      <AiOperationsExperience />
-    ) : isAiExplorer ? (
-      <AiExplorerExperience />
     ) : formVariant ? (
       <ContactExperience variant={formVariant} />
     ) : null;
@@ -289,15 +258,9 @@ export function DetailPage({
                   {page.primaryCta ? (
                     <Link
                       className="button button-solid button-large"
-                      href={
-                        isProposedProductPlane
-                          ? "/contact/chain-launch"
-                          : page.primaryCta.href
-                      }
+                      href={page.primaryCta.href}
                     >
-                      {isProposedProductPlane
-                        ? "Scope this for your chain"
-                        : page.primaryCta.label}{" "}
+                      {page.primaryCta.label}{" "}
                       <span aria-hidden="true">↗</span>
                     </Link>
                   ) : null}
@@ -322,53 +285,14 @@ export function DetailPage({
                   </div>
                 ))}
                 <small>
-                  {isImplementedRpcBeta
-                    ? "Published beta behavior, not a service-level commitment"
-                    : isUpgradeAssurance
-                      ? "Published targets and scope limits, not a security guarantee"
-                      : "Published scope, not an availability claim"}
+                  {isUpgradeAssurance
+                    ? "Published targets and scope limits, not a security guarantee"
+                    : "Published scope, not an availability claim"}
                 </small>
               </div>
             ) : null}
           </div>
         </section>
-      ) : null}
-
-      {isImplementedRpcBeta ? (
-        <aside className="detail-maturity" aria-label="Product maturity">
-          <div className="container">
-            <span className="docs-state docs-state-live">
-              {isPulseBeta ? "Live in RPC beta" : "Live beta"}
-            </span>
-            <p>
-              {isPulseBeta
-                ? "Pulse is the inspectable policy and routing layer inside the Ethereum, Base, and Solana RPC beta. It classifies methods, blocks unsafe namespaces, verifies eligible upstreams, samples verified read routes, ranks them by bounded observed latency and failures, opens a short circuit after repeated transport failures, limits reads to two attempts, keeps writes on the configured primary, applies quotas, and records aggregate outcomes. Predictive routing is not presented as active."
-                : "The HTTP JSON-RPC gateway activates only after a bounded live check verifies Ethereum mainnet. The default limits are 1,000 calls per key and service each hour and 10,000 calls per workspace each hour. The beta has no card requirement or commercial service-level commitment."}
-            </p>
-            <Link href="/docs">
-              Make the first request <span aria-hidden="true">↗</span>
-            </Link>
-          </div>
-        </aside>
-      ) : isProposedProductPlane ? (
-        <aside className="detail-maturity" aria-label="Product maturity">
-          <div className="container">
-            <span className="docs-state docs-state-proposed">
-              Proposed architecture
-            </span>
-            <p>
-              This product plane is not generally available. The capabilities,
-              workflow, and operating model below are prelaunch proposals, not
-              live endpoint, chain, performance, or service-level claims.
-              A stored network brief is not deployed infrastructure. Production
-              work begins only with a scoped partner agreement and verified
-              readiness gates.
-            </p>
-            <Link href="/whitepaper">
-              Review the technical boundary <span aria-hidden="true">↗</span>
-            </Link>
-          </div>
-        </aside>
       ) : null}
 
       {specialized ? (
@@ -394,24 +318,12 @@ export function DetailPage({
             <Reveal className="split-heading">
               <div>
                 <span className="section-kicker">
-                  {isImplementedRpcBeta ? "How it works" : capabilitySectionCopy.kicker}
+                  {capabilitySectionCopy.kicker}
                 </span>
-                <h2>
-                  {isImplementedRpcBeta
-                    ? isPulseBeta
-                      ? "Policy before prediction."
-                      : "Built for the first real request."
-                    : capabilitySectionCopy.title}
-                </h2>
+                <h2>{capabilitySectionCopy.title}</h2>
               </div>
               <div className="split-copy">
-                <p>
-                  {isImplementedRpcBeta
-                    ? isPulseBeta
-                      ? "Pulse makes routing decisions inspectable today. Its bounded process-local latency average adapts safe reads without claiming a predictive model. Learning systems can be added only after real traffic produces enough durable evidence to evaluate them safely."
-                      : "The beta connects account identity, scoped credentials, request policy, verified upstream readiness, two-tier quotas, and aggregate telemetry in one self-service path."
-                    : capabilitySectionCopy.description}
-                </p>
+                <p>{capabilitySectionCopy.description}</p>
               </div>
             </Reveal>
             <div className="capability-grid">
