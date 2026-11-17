@@ -274,7 +274,7 @@ test("managed deployment fails closed and checks full readiness", async () => {
   }
   assert.match(
     continuousIntegration,
-    /pnpm run smoke:auth -- http:\/\/localhost:3000/,
+    /pnpm run smoke:auth -- http:\/\/127\.0\.0\.1:3000/,
   );
   assert.equal(
     packageJson.scripts["preflight:application"],

@@ -35,7 +35,11 @@ export default defineConfig(async ({ command, mode }) => {
               process.env.NODEZUNO_LOCAL_PREVIEW ?? "true",
             GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
             GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? "",
-            ZOHO_SMTP_HOST: process.env.ZOHO_SMTP_HOST ?? "smtp.zoho.in",
+            // Local preview may intentionally run without outbound email.
+            // Do not inject a half-configured SMTP host when no password is
+            // present, because readiness correctly rejects partial delivery
+            // configuration outside this local-only case.
+            ZOHO_SMTP_HOST: process.env.ZOHO_SMTP_HOST ?? "",
             NODEZUNO_ADMIN_EMAILS:
               process.env.NODEZUNO_ADMIN_EMAILS ?? "",
             NODEZUNO_ENABLE_LEGACY_HOSTING_IDENTITY:

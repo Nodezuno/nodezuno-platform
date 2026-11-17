@@ -88,12 +88,12 @@ jobs:
             'RATE_LIMIT_SECRET=ci-rate-limit-7c4e91b2f8a563d09e17c42b' \
             'BETTER_AUTH_SECRET=ci-auth-secret-6e2b94f1c8073a5d29e14f68' \
             'REVIEW_CAPABILITY_SECRET=ci-review-capability-f43a0de76b9512c8e6d70a24' \
-            'BETTER_AUTH_URL=http://localhost:3000' \
+            'BETTER_AUTH_URL=http://127.0.0.1:3000' \
             'NODEZUNO_LOCAL_PREVIEW=true' \
             'NODEZUNO_ADMIN_EMAILS=info@nodezuno.com' \
             'NODEZUNO_ENABLE_LEGACY_HOSTING_IDENTITY=true' \
             > .dev.vars
-          pnpm run dev -- --port 3000 > /tmp/nodezuno-dev.log 2>&1 &
+          pnpm run dev --hostname 127.0.0.1 --port 3000 > /tmp/nodezuno-dev.log 2>&1 &
           server_pid=$!
           cleanup() {
             kill "$server_pid" 2>/dev/null || true
@@ -123,7 +123,7 @@ jobs:
             sleep 1
           done
           pnpm run smoke:links -- http://127.0.0.1:3000
-          pnpm run smoke:auth -- http://localhost:3000
+          pnpm run smoke:auth -- http://127.0.0.1:3000
           pnpm run smoke:local
 
   image:
