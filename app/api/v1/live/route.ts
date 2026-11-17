@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   return apiJson(
     {
       data: {
-        service: "nodezuno-web-control-plane",
+        service: "nodezuno-release-review",
         status: "alive",
         runtime: isContainerRuntime() ? "container" : "sites",
         checkedAt: new Date().toISOString(),

@@ -317,10 +317,9 @@ analysis, retention, and deletion controls.
 
 ### Secret handling
 
-`RATE_LIMIT_SECRET`, `API_KEY_PEPPER`, `BETTER_AUTH_SECRET`, and
-`REVIEW_CAPABILITY_SECRET` must be unique, random values of at least 32
-characters. OAuth, email, customer RPC, and dedicated payment RPC
-credentials remain deployment secrets. They must not appear in source control,
+`RATE_LIMIT_SECRET`, `BETTER_AUTH_SECRET`, and `REVIEW_CAPABILITY_SECRET` must
+be unique, random values of at least 32 characters. OAuth, email, and optional
+payment-verifier credentials remain deployment secrets. They must not appear in source control,
 container images, logs, support tickets, public forms, or client-side code.
 `ZOHO_SMTP_PASSWORD` is a protected app password for the fixed
 `info@nodezuno.com` mailbox. The mailbox address is not an authorization
@@ -359,7 +358,7 @@ The supplied first-production profile requires:
 - port 3000 available only inside the Compose network;
 - an unprivileged application container with no-new-privileges;
 - mode `0700` data and backup directories owned by UID 1001;
-- four independent application secrets;
+- three independent core application secrets;
 - verified email delivery for public email authentication;
 - the Zoho SMTP host, protected app password, `info@nodezuno.com` mailbox, and
   scheduled one-shot notification worker;

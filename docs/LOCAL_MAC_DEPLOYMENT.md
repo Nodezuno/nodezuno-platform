@@ -2,8 +2,8 @@
 
 This profile runs Nodezuno as a real long-lived service on one Mac. It models
 the low-cost first AWS topology: one application host, one persistent disk,
-one supervised web process, and separately supervised blockchain clients on
-loopback interfaces. It does not use Docker, ChatGPT Sites, or an ephemeral
+one supervised web process, and separately supervised bounded background
+workers. It does not use Docker, Cloudflare Pages, or an ephemeral
 development server.
 
 The profile is appropriate for local integration, operator rehearsal, and a
@@ -110,19 +110,18 @@ bash deploy/local-mac/install.sh \
 The installer performs these gates in order:
 
 1. Validate the runtime, package manager, port, and administrator mailbox.
-2. Create persistent directories and four independent application secrets.
+2. Create persistent directories and three independent application secrets.
 3. Preserve an existing environment unchanged on repeated runs.
 4. Render and validate the secret-free web, email-worker, and payment-worker
    LaunchAgents.
 5. Install the frozen dependency graph and create a standalone Next.js build
    in a sanitized build environment with no runtime secrets.
-6. Validate control-plane configuration.
-7. Verify the dedicated Ethereum payment endpoints when stablecoin settlement
-   is enabled, then verify the customer Ethereum attachment when its separate
-   RPC configuration is present.
+6. Validate application configuration.
+7. Verify the dedicated Ethereum payment endpoints only when automatic payment
+   verification is explicitly configured for this non-Cloudflare profile.
 8. Create and verify a pre-deployment SQLite backup when a database exists.
 9. Stop the old service, apply migrations, and switch the active release.
-10. Start all three launchd services and require web liveness, readiness, and backend
+10. Start the launchd services and require web liveness, readiness, and backend
     health within 30 seconds.
 
 If the new app release fails health checks, the script selects the previous app
@@ -218,30 +217,6 @@ There is no recurring manual lock cleanup with the new kernel locks. A later
 blocked lock means a process still holds its descriptor or the private lock
 path failed validation; inspect that condition instead of deleting files.
 
-## Ethereum light-client attachment boundary
-
-The installer leaves `NODEZUNO_RPC_UPSTREAMS_JSON` empty. This is deliberate:
-the web service must not claim Ethereum RPC until a separately supervised
-client is healthy and the gateway has verified chain identity.
-
-The Ethereum client must bind only to loopback. After the client workstream
-has installed its reviewed environment entry, every deployment runs:
-
-```bash
-node scripts/preflight-node-attachments.mjs ethereum
-```
-
-The command verifies only the attached Ethereum network for this local
-profile. It does not turn missing Base or Solana nodes into false deployment
-failures. A nonempty RPC configuration that does not pass the Ethereum
-preflight blocks release before the existing web service is stopped.
-
-Treat every upstream URL and header in
-`~/Library/Application Support/Nodezuno/config/nodezuno.env` as a secret.
-Keep the file at mode `0600`, do not commit it, and restart the web service
-after an approved change. A light client is not a full archive node and must
-be represented as a verified local light-client profile in product claims.
-
 ## Configuration changes
 
 The generated environment is shell-escaped owner-only data. Before changing
@@ -262,9 +237,8 @@ it, create a backup and stop the service. Keep these invariants:
   exception is for controlled operator rehearsal only and is not approval to
   accept customer funds.
 - `NODEZUNO_DATABASE_DRIVER=sqlite` points to the private persistent path.
-- `NODEZUNO_ALLOW_ETHEREUM_HTTP_LOOPBACK` stays `false` until a reviewed,
-  loopback-only Ethereum client has passed its own readiness probe.
-- `RATE_LIMIT_SECRET`, `API_KEY_PEPPER`, `BETTER_AUTH_SECRET`, and `REVIEW_CAPABILITY_SECRET` are distinct.
+- `RATE_LIMIT_SECRET`, `BETTER_AUTH_SECRET`, and
+  `REVIEW_CAPABILITY_SECRET` are distinct.
 - Node.js and pnpm paths are absolute and stable.
 - Google variables are configured as a complete pair or left empty.
 - External notification delivery uses `ZOHO_SMTP_HOST` and
@@ -314,9 +288,8 @@ backup and manifest pairs to a separately controlled encrypted destination.
 | `logs/` | CloudWatch Logs | Retention, redaction, alerts, incident queries |
 | `health.sh` | Caddy readiness checks and external monitor | Probe `/api/v1/live`, `/ready`, and `/health` |
 | Versioned `releases/` | Immutable CI artifact or image | Signed build provenance and rollback catalog |
-| Loopback blockchain client | Separate private service or instance | Disk, bandwidth, chain sync, authenticated private routing |
 | Verified SQLite backup | Encrypted S3 backup plus EBS snapshot | Object lock, lifecycle policy, restore rehearsal |
-| macOS firewall | Security groups, NACLs, and host firewall | Minimum ingress and controlled RPC egress |
+| macOS firewall | Security groups, NACLs, and host firewall | Minimum ingress and only required payment-verification egress |
 
 The first low-cost AWS deployment may use the same SQLite single-instance
 shape on encrypted EBS, but it must keep exactly one writer. Move the database
@@ -335,7 +308,6 @@ self-service traffic.
   switch occur.
 - SQLite provides durable single-host state, not multi-host consensus.
 - The scripts do not open firewall ports or modify `/etc/hosts`.
-- The scripts do not install or start an Ethereum client.
 - The scripts do not create a public DNS name, TLS certificate, alert target,
   off-host backup destination, or cloud account resources.
 

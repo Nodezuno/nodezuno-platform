@@ -30,7 +30,9 @@ export async function sendZohoSmtpMessage(options: {
     const smtpSocket: SmtpSocket = {
       readable: Readable.toWeb(socket) as ReadableStream<Uint8Array>,
       writable: Writable.toWeb(socket) as WritableStream<Uint8Array>,
-      close: () => socket.destroy(),
+      close: () => {
+        socket.destroy();
+      },
     };
     return await sendSmtpMessage(smtpSocket, options.message, options.password);
   } catch (error) {

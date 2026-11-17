@@ -60,7 +60,6 @@ if grep --quiet --extended-regexp 'replace-with|replace\.invalid|operator@exampl
 fi
 
 required_names=(
-  API_KEY_PEPPER
   BETTER_AUTH_SECRET
   BETTER_AUTH_URL
   NODEZUNO_ADMIN_EMAILS
@@ -107,22 +106,18 @@ environment_value() {
 }
 
 rate_limit_secret="$(environment_value RATE_LIMIT_SECRET)"
-api_key_pepper="$(environment_value API_KEY_PEPPER)"
 better_auth_secret="$(environment_value BETTER_AUTH_SECRET)"
 review_capability_secret="$(environment_value REVIEW_CAPABILITY_SECRET)"
-for secret in "$rate_limit_secret" "$api_key_pepper" "$better_auth_secret" "$review_capability_secret"; do
+for secret in "$rate_limit_secret" "$better_auth_secret" "$review_capability_secret"; do
   if (( ${#secret} < 32 )); then
     printf 'Every core production secret must contain at least 32 characters.\n' >&2
     exit 78
   fi
 done
-if [[ "$rate_limit_secret" = "$api_key_pepper" ]] ||
-  [[ "$rate_limit_secret" = "$better_auth_secret" ]] ||
+if [[ "$rate_limit_secret" = "$better_auth_secret" ]] ||
   [[ "$rate_limit_secret" = "$review_capability_secret" ]] ||
-  [[ "$api_key_pepper" = "$better_auth_secret" ]] ||
-  [[ "$api_key_pepper" = "$review_capability_secret" ]] ||
   [[ "$better_auth_secret" = "$review_capability_secret" ]]; then
-  printf 'The four core production secrets must be independent.\n' >&2
+  printf 'The three core production secrets must be independent.\n' >&2
   exit 78
 fi
 

@@ -16,7 +16,17 @@ export async function GET(request: Request) {
     ]);
     const generatedAt = new Date();
     const updatedAt = generatedAt.getTime();
-    const services = storedServices.map((service) => {
+    const retiredServiceSlugs = new Set([
+      "developer-workspace",
+      "rpc-mesh",
+      "rpc-ethereum",
+      "rpc-base",
+      "rpc-solana",
+      "grpc-ethereum",
+    ]);
+    const services = storedServices
+      .filter((service) => !retiredServiceSlugs.has(service.slug))
+      .map((service) => {
       if (service.slug === "website") {
         return {
             ...service,
@@ -44,7 +54,7 @@ export async function GET(request: Request) {
         };
       }
       return service;
-    });
+      });
     const overall = deriveOverallStatus(services, incidents);
 
     return apiJson(

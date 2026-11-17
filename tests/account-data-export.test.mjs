@@ -30,7 +30,7 @@ const keyB = "22345678-1234-4234-8234-1234567890ab";
 const keyC = "32345678-1234-4234-8234-1234567890ab";
 const recordedAt = 1_800_000_000_000;
 
-test("account export isolates tenants, preserves roles, and excludes stored credentials", async () => {
+test("account export contains current account and review data, excluding legacy platform rows", async () => {
   const database = await createMigratedD1();
   await seedAccountExportFixture(database.database);
 
@@ -44,37 +44,21 @@ test("account export isolates tenants, preserves roles, and excludes stored cred
   assert.equal(data.account.id, accountA);
   assert.equal(data.account.email, "caller@example.com");
   assert.deepEqual(
-    data.workspaces.map((workspace) => workspace.id).sort(),
-    [workspaceA, workspaceC],
-  );
-  assert.deepEqual(
-    data.memberships.map((membership) => membership.id).sort(),
-    ["member-a-developer", "member-a-owner"],
-  );
-  assert.deepEqual(
-    data.services.map((service) => service.id).sort(),
-    [serviceA, serviceC],
-  );
-  assert.deepEqual(
-    data.apiKeys.map((apiKey) => apiKey.id),
-    [keyA],
-    "developer membership must not widen owner-only key visibility",
-  );
-  assert.deepEqual(
-    data.auditEvents.map((event) => event.id),
-    ["audit-a"],
-    "developer membership must not widen owner-only audit visibility",
-  );
-  assert.deepEqual(
-    data.usage.map((entry) => entry.serviceId).sort(),
-    [serviceA, serviceC],
-  );
-  assert.equal(data.usage[0].latencyMsTotal, 20);
-  assert.deepEqual(
     data.submissions.map((submission) => submission.id),
     ["submission-a"],
   );
-  assert.equal(data.schemaVersion, "5");
+  assert.equal(data.schemaVersion, "6");
+  for (const retiredField of [
+    "workspaces",
+    "memberships",
+    "services",
+    "apiKeys",
+    "accessPolicies",
+    "auditEvents",
+    "usage",
+  ]) {
+    assert.equal(Object.hasOwn(data, retiredField), false);
+  }
   assert.deepEqual(
     data.reviewOrders.map((order) => order.id),
     ["review-order-a"],
@@ -98,7 +82,7 @@ test("account export isolates tenants, preserves roles, and excludes stored cred
   );
   assert.equal(data.redactions.paymentVerificationWorkerLeases, true);
   assert.equal(data.redactions.paymentReconciliationOperatorIdentity, true);
-  assert.equal(data.redactions.rpcEndpointConfiguration, true);
+  assert.equal(data.redactions.paymentVerifierCredentials, true);
   assert.equal(data.sessions.length, 1);
   assert.deepEqual(data.sessions[0], {
     id: "session-a",
@@ -109,9 +93,6 @@ test("account export isolates tenants, preserves roles, and excludes stored cred
     networkAddressRecorded: true,
     userAgentRecorded: true,
   });
-  assert.equal(data.accessPolicies[0].allowedOriginCount, 1);
-  assert.equal(data.accessPolicies[0].allowedIpRangeCount, 1);
-  assert.equal(data.accessPolicies[0].allowedMethodCount, 1);
 
   const serialized = JSON.stringify(data);
   for (const forbiddenValue of [
@@ -385,11 +366,11 @@ test("account export rate policy allows three hourly attempts and rejects the fo
 });
 
 test("account export route and UI keep origin, rate, and hosted behavior explicit", async () => {
-  const [route, component, accountPage, openApi] = await Promise.all([
+  const [route, component, accountPage, apiReference] = await Promise.all([
     readFile("app/api/v1/account/export/route.ts", "utf8"),
     readFile("components/account-data-export.tsx", "utf8"),
     readFile("app/account/page.tsx", "utf8"),
-    readFile("lib/public-api.ts", "utf8"),
+    readFile("docs/API.md", "utf8"),
   ]);
 
   assert.match(route, /export async function POST/);
@@ -412,12 +393,9 @@ test("account export route and UI keep origin, rate, and hosted behavior explici
   assert.match(accountPage, /<AccountDataExport/);
   assert.match(accountPage, /href="\/account#data-export"/);
 
-  assert.match(openApi, /path: "\/api\/v1\/account\/export"/);
-  assert.match(openApi, /operationId: "downloadAccountData"/);
-  assert.match(openApi, /AccountDataExportEnvelope/);
-  assert.match(openApi, /fresh-application-session/);
+  assert.match(apiReference, /POST \| `\/api\/v1\/account\/export`/);
   assert.doesNotMatch(
-    `${route}\n${component}\n${accountPage}\n${openApi}`,
+    `${route}\n${component}\n${accountPage}\n${apiReference}`,
     /\u2014/,
   );
 

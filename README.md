@@ -30,14 +30,13 @@ deployment service. AI can assist the reviewer; it cannot approve a release.
 | `components/` | Website, order form, private portal, and administration UI |
 | `lib/review-policy.ts` | Shared current price, scope limits, and offer labels |
 | `lib/client/` | Browser API and abuse-challenge helpers |
-| `lib/api/` | Shared and internal API contracts; public document remains in `lib/public-api.ts` |
+| `lib/api/` | Shared first-party website API contracts |
 | `lib/server/` | Identity, review commerce, payment verification, storage, and delivery |
 | `drizzle/` | Ordered immutable SQL migrations and historical generation metadata |
 | `scripts/` | Migrations, preflight, workers, source export, and release checks |
 | `wrangler.jsonc` | Cloudflare Worker, D1, R2, and production route configuration |
 | `deploy/` | Alternate Docker, AWS, Kubernetes, and local macOS profiles retained for reference |
 | `docs/` | Current guides, runbooks, and clearly marked historical references |
-| `services/` | Retained native gateway foundation, not the current public offer |
 | `tests/` | Existing release regression coverage |
 
 ## Customer workflow
@@ -115,6 +114,9 @@ copy of the working directory. Keep `.dev.vars`, `.wrangler/`, databases,
 See the [Git and GitHub workflow](docs/GIT_WORKFLOW.md) and
 [production release procedure](docs/RELEASE.md) before creating a release.
 
-Earlier RPC, node, explorer, and workspace foundations remain for engineering
-reference. They are not the current public product or evidence of deployed
-infrastructure. Historical strategies are classified in the documentation map.
+The retired RPC, gRPC, node-runner, explorer, and developer-workspace product
+implementations have been removed from the current application. Ordered D1
+migrations remain unchanged for compatibility with databases created by earlier
+releases; this cleanup does not delete migration history, production tables, or
+customer data. Superseded strategy documents are identified in the
+[documentation map](docs/README.md).

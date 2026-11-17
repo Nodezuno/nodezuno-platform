@@ -39,7 +39,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/scripts/migrate-sqlite.mjs ./scri
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/migrate-container.mjs ./scripts/migrate-container.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/backup-sqlite.mjs ./scripts/backup-sqlite.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/restore-sqlite.mjs ./scripts/restore-sqlite.mjs
-COPY --from=builder --chown=nextjs:nodejs /app/scripts/preflight-control-plane.mjs ./scripts/preflight-control-plane.mjs
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/preflight-review-application.mjs ./scripts/preflight-review-application.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/preflight-deployment-topology.mjs ./scripts/preflight-deployment-topology.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/process-notification-outbox.mjs ./scripts/process-notification-outbox.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/process-stablecoin-payments.mjs ./scripts/process-stablecoin-payments.mjs

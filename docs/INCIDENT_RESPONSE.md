@@ -31,13 +31,13 @@ These are internal targets, not customer SLAs.
 
 1. Open an incident record with UTC start time and reporter.
 2. Assign severity and incident commander.
-3. Preserve CloudTrail, CloudWatch, GitHub Actions, SSM, ECR, and application
-   evidence. Do not paste secrets into the incident record.
+3. Preserve the relevant Cloudflare Worker, D1, R2, GitHub Actions, and
+   application evidence. Do not paste secrets into the incident record.
 4. Decide whether to contain by blocking a release, revoking an identity,
    rotating a secret, stopping a service, or restricting DNS.
-5. Check `/api/v1/live`, `/api/v1/ready`, `/api/v1/status`, EC2 status, disk,
-   memory, swap, backup age, payment-verifier heartbeat and claim alarms, S3 and
-   KMS errors, and the deployed digest.
+5. Check `/api/v1/live`, `/api/v1/ready`, `/api/v1/status`, Worker errors and
+   CPU, D1 health and migration head, R2 access, notification backlog, payment
+   mode, and the deployed version.
 6. Start an internal timeline. Record facts separately from hypotheses.
 7. Set the next update time even when there is no customer-facing notice.
 
@@ -45,7 +45,7 @@ These are internal targets, not customer SLAs.
 
 Use the smallest reversible action that removes active risk:
 
-1. revoke a compromised customer session or API key;
+1. revoke a compromised customer account session or review-order capability;
 2. disable an affected authentication provider;
 3. roll back to the last healthy immutable image;
 4. rotate one exposed secret and redeploy;
@@ -67,35 +67,29 @@ When exposure scope is uncertain, rotate in this order:
 
 1. Google OAuth client secret and Zoho SMTP app password;
 2. `BETTER_AUTH_SECRET`, followed by revocation of existing sessions;
-3. `API_KEY_PEPPER`, with a planned customer API-key reissue because existing
-   key verification changes;
-4. `RATE_LIMIT_SECRET`;
-5. optional blockchain or gRPC provider credentials;
-6. GitHub environment access and AWS IAM role trust if the source-control
-   boundary is involved.
+3. `RATE_LIMIT_SECRET`;
+4. any optional payment-verifier endpoint credential, if used by a non-
+   Cloudflare deployment;
+5. GitHub repository and Cloudflare account access if the source-control or
+   deployment boundary is involved.
 
-Generate every replacement independently. Upload the updated SSM SecureString
-from an approved workstation and deploy an immutable release. Never place a
-secret value in a ticket, chat, commit, command output, Terraform input, or
-CloudWatch log.
+Generate every replacement independently. Update the relevant provider secret
+store and deploy an immutable release. Never place a secret value in a ticket,
+chat, commit, command output, workflow output, or application log.
 
 ## Evidence sources
 
-- CloudTrail management events for AWS control changes and read/write S3 data
-  events under the deliverables `reviews/` prefix;
-- GitHub workflow run, approval, commit, SBOM, provenance, and image digest;
-- ECR scan findings;
-- CloudWatch application and masked edge logs;
-- EC2 and custom operational metrics;
-- SSM command invocation status;
+- Cloudflare Worker deployment, D1, R2, and account events available for the
+  configured plan;
+- GitHub workflow run, approval, commit, and artifact evidence;
 - Better Auth and administrator audit records;
 - stablecoin instructions, claims, verifier heartbeat, immutable
   reconciliation cases and confirmations, order events, lifecycle-notification
   outbox state, and buyer receipt record hashes;
-- SQLite backup manifest and SHA-256 digest;
-- sealed deliverable metadata, exact S3 version, checksum, KMS identity, and
+- D1 recovery/export evidence and verification details;
+- sealed deliverable metadata, exact R2 object version, checksum, and
   application prepare/verify/release audit events;
-- Route 53 record history where available.
+- DNS record history where available.
 
 Access to evidence must use temporary human credentials. Export only the
 minimum required data and preserve a hash for each exported artifact.

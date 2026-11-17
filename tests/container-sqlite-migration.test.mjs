@@ -349,7 +349,7 @@ test("SQLite pre-0024 upgrade requires an explicit contract cutover", async () =
   }
 });
 
-test("readiness rejects a SQLite schema missing the latest service column", async () => {
+test("readiness rejects a SQLite schema before review-order tables exist", async () => {
   const directory = await mkdtemp(
     path.join(os.tmpdir(), "nodezuno-stale-schema-"),
   );
@@ -362,7 +362,7 @@ test("readiness rejects a SQLite schema missing the latest service column", asyn
   const sqlite = new DatabaseSync(pathname);
   try {
     sqlite.exec("PRAGMA foreign_keys = ON");
-    await applyMigrationsThrough(sqlite, "0011_");
+    await applyMigrationsThrough(sqlite, "0014_");
     sqlite.close();
 
     process.env.NODEZUNO_RUNTIME = "container";
@@ -370,7 +370,7 @@ test("readiness rejects a SQLite schema missing the latest service column", asyn
     process.env.NODEZUNO_SQLITE_PATH = pathname;
     await assert.rejects(
       checkDatabase(),
-      /last_mutation_id|developer_rpc_service_guardrails|no such column/i,
+      /no such table: review_orders/i,
     );
   } finally {
     try {

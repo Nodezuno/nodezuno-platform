@@ -22,9 +22,7 @@ export type PageKind =
   | "contact"
   | "legal"
   | "pricing"
-  | "status"
-  | "directory"
-  | "calculator";
+  | "status";
 
 export type DetailPageData = {
   path: string;
@@ -156,45 +154,6 @@ export const communityItems: NavItem[] = [
       "Check the current website, review intake, private portal, and manual payment-intake status.",
     href: "/status",
     section: "Policies",
-  },
-];
-
-export const developerItems: NavItem[] = [
-  {
-    title: "Standard EVM preparation guide",
-    description:
-      "Use the standard EVM checklist or learn what is needed for a chain-specific non-EVM intake.",
-    href: "/docs",
-    section: "Guides",
-  },
-  {
-    title: "FAQ",
-    description:
-      "Direct answers about fit, timing, scope, confidentiality, AI use, pricing, and what the service cannot promise.",
-    href: "/faq",
-    section: "Guides",
-  },
-  {
-    title: "Technical whitepaper",
-    description:
-      "Read the current EVM methodology for comparing upgrades, testing against chain state, recording evidence, and assigning human responsibility.",
-    href: "/whitepaper",
-    badge: "Working paper",
-    section: "Technical",
-  },
-  {
-    title: "Research",
-    description:
-      "Future studies on public upgrade failures, fork testing, financial rules, and measured AI use in security review.",
-    href: "/resources/research",
-    section: "Technical",
-  },
-  {
-    title: "Nodezuno Signal",
-    description:
-      "Subscribe to the planned monthly field note for teams shipping onchain changes.",
-    href: "/community/newsletter",
-    section: "Updates",
   },
 ];
 
@@ -1231,7 +1190,7 @@ const resourcePages: DetailPageData[] = [
         index: "03",
         title: "Continuous review software",
         description:
-          "Continuous integration checks, governance monitoring, and a customer analysis workspace remain future plans until they are implemented and verified.",
+          "Automated continuous-integration checks and governance monitoring remain future plans until they are implemented and verified.",
       },
       {
         index: "04",
@@ -2041,17 +2000,4 @@ export const useCases = [
     metrics: ["Action execution", "Timelock state", "Post-state checks"],
     href: "/methodology",
   },
-];
-
-export const chainDirectory = [
-  { name: "Ethereum", family: "EVM L1", finality: "Protocol dependent", support: "Standard EVM candidate", tone: "blue" },
-  { name: "Arbitrum One", family: "EVM L2", finality: "Rollup dependent", support: "EVM scope review required", tone: "aqua" },
-  { name: "Base", family: "EVM L2", finality: "Rollup dependent", support: "EVM scope review required", tone: "blue" },
-  { name: "OP Mainnet", family: "EVM L2", finality: "Rollup dependent", support: "EVM scope review required", tone: "red" },
-  { name: "Polygon PoS", family: "EVM", finality: "Network dependent", support: "EVM scope review required", tone: "violet" },
-  { name: "Avalanche C-Chain", family: "EVM", finality: "Network dependent", support: "EVM scope review required", tone: "red" },
-  { name: "Solana", family: "SVM", finality: "Network dependent", support: "Custom fit and reviewer check", tone: "aqua" },
-  { name: "Cosmos SDK chains", family: "Cosmos", finality: "Chain dependent", support: "Custom fit and reviewer check", tone: "violet" },
-  { name: "Sui and Aptos", family: "Move", finality: "Network dependent", support: "Custom fit and reviewer check", tone: "blue" },
-  { name: "Polkadot and Substrate", family: "Substrate", finality: "Chain dependent", support: "Custom fit and reviewer check", tone: "red" },
 ];

@@ -39,7 +39,6 @@ const routeContracts = new Map(
     "admin/maintenance": contract(["POST"], "admin", {
       origin: "required",
     }),
-    "admin/node-attachments": contract(["GET"], "admin"),
     "admin/review-orders": contract(["GET"], "admin"),
     "admin/review-orders/[id]": contract(["PATCH"], "admin", {
       body: "json",
@@ -76,162 +75,7 @@ const routeContracts = new Map(
     "auth/providers": contract(["GET"], "public"),
     "auth/session": contract(["GET"], "public"),
     chains: contract(["GET"], "public"),
-    "control-plane/api-keys": contract(
-      ["GET", "POST"],
-      "management-key",
-      {
-        body: true,
-        origin: "forbidden",
-      },
-    ),
-    "control-plane/api-keys/[id]": contract(
-      ["DELETE"],
-      "management-key",
-      { origin: "forbidden" },
-    ),
-    "control-plane/api-keys/[id]/rotate": contract(
-      ["POST"],
-      "management-key",
-      {
-        body: true,
-        origin: "forbidden",
-      },
-    ),
-    "control-plane/services": contract(
-      ["GET", "POST"],
-      "management-key",
-      {
-        body: true,
-        origin: "forbidden",
-      },
-    ),
-    "control-plane/services/[id]": contract(
-      ["GET", "PATCH", "DELETE"],
-      "management-key",
-      {
-        body: true,
-        origin: "forbidden",
-      },
-    ),
-    "control-plane/services/[id]/rpc-access-policy": contract(
-      ["GET", "PUT"],
-      "management-key",
-      {
-        body: true,
-        origin: "forbidden",
-      },
-    ),
-    "control-plane/services/[id]/quota-guardrail": contract(
-      ["GET", "PUT"],
-      "management-key",
-      {
-        body: true,
-        origin: "forbidden",
-      },
-    ),
-    "control-plane/services/[id]/usage": contract(
-      ["GET"],
-      "management-key",
-      { origin: "forbidden" },
-    ),
-    "developer/api-keys": contract(
-      ["GET", "POST"],
-      "browser-session",
-      {
-        body: true,
-        origin: "required",
-      },
-    ),
-    "developer/api-keys/[id]": contract(
-      ["DELETE"],
-      "browser-session",
-      { origin: "required" },
-    ),
-    "developer/api-keys/[id]/rotate": contract(
-      ["POST"],
-      "browser-session",
-      {
-        body: true,
-        origin: "required",
-      },
-    ),
-    "developer/services": contract(
-      ["GET", "POST"],
-      "browser-session",
-      {
-        body: true,
-        origin: "required",
-      },
-    ),
-    "developer/services/[id]": contract(
-      ["GET", "PATCH", "DELETE"],
-      "browser-session",
-      {
-        body: true,
-        origin: "required",
-      },
-    ),
-    "developer/services/[id]/rpc-access-policy": contract(
-      ["GET", "PUT"],
-      "browser-session",
-      {
-        body: true,
-        origin: "required",
-      },
-    ),
-    "developer/services/[id]/quota-guardrail": contract(
-      ["GET", "PUT"],
-      "browser-session",
-      {
-        body: true,
-        origin: "required",
-      },
-    ),
-    "developer/services/[id]/usage": contract(
-      ["GET"],
-      "browser-session",
-    ),
-    "developer/services/[id]/ai-diagnosis": contract(
-      ["GET"],
-      "browser-session",
-    ),
-    "developer/workspace": contract(
-      ["GET", "POST"],
-      "browser-session",
-      {
-        body: true,
-        origin: "required",
-      },
-    ),
-    "developer/workspace/audit-events": contract(
-      ["GET"],
-      "browser-session",
-    ),
-    "developer/workspace/members": contract(
-      ["GET", "POST"],
-      "browser-session",
-      {
-        body: true,
-        origin: "required",
-      },
-    ),
-    "developer/workspace/members/[id]": contract(
-      ["PUT", "DELETE"],
-      "browser-session",
-      {
-        body: true,
-        origin: "required",
-      },
-    ),
-    "gas-estimate": contract(["POST"], "public", {
-      body: true,
-      origin: "required",
-    }),
     health: contract(["GET"], "public"),
-    "internal/grpc/authorize": contract(["POST"], "internal-secret", {
-      body: true,
-      origin: "forbidden",
-    }),
     live: contract(["GET"], "public", { errors: false }),
     "newsletter/subscriptions": contract(["POST"], "public", {
       body: true,
@@ -245,11 +89,6 @@ const routeContracts = new Map(
       body: true,
       origin: "required",
     }),
-    openapi: contract(["GET"], "public", {
-      direct: true,
-      errors: false,
-    }),
-    "platform/whoami": contract(["GET"], "platform-key"),
     ready: contract(["GET"], "public", { errors: false }),
     "review-orders": contract(["POST"], "public", {
       body: "json",
@@ -292,15 +131,6 @@ const routeContracts = new Map(
       "review-capability",
       { direct: true, requestId: "observed" },
     ),
-    "rpc/[serviceId]": contract(
-      ["OPTIONS", "POST"],
-      "rpc-key",
-      {
-        body: true,
-        direct: true,
-        origin: "forbidden",
-      },
-    ),
     status: contract(["GET"], "public"),
     submissions: contract(["POST"], "public", {
       body: true,
@@ -311,15 +141,8 @@ const routeContracts = new Map(
 
 const authenticationPatterns = {
   admin: /\brequire(?:Fresh)?AdminRequest\(request\)/,
-  "browser-session": /\brequireDeveloperIdentity\(request\)/,
-  "internal-secret": /\brequireGrpcControlPlaneSecret\(request\)/,
-  "management-key": /\brequireDeveloperApiKeyScope\(/,
-  "platform-key":
-    /\breadDeveloperApiKey\(request\)[\s\S]*\bauthenticateDeveloperApiKey\(/,
   "review-capability":
     /\b(?:authorizeReviewOrder|createStablecoinPaymentIntent|submitStablecoinPaymentClaim)\(/,
-  "rpc-key":
-    /\breadDeveloperApiKey\(request\)[\s\S]*\bauthenticateDeveloperApiKey\(/,
 };
 
 async function routeSource(pathname) {
