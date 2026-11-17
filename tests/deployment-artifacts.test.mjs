@@ -762,7 +762,7 @@ test("container build context excludes local and production secrets", async () =
 test("backend smoke is local-only and covers current public services", async () => {
   const smoke = await source("scripts/backend-smoke.mjs");
 
-  assert.match(smoke, /refuses non-loopback targets/);
+  assert.match(smoke, /refuses non-loopback host/);
   assert.match(smoke, /\/api\/v1\/status/);
   assert.match(smoke, /\/api\/v1\/chains/);
   assert.match(smoke, /\/api\/v1\/auth\/providers/);

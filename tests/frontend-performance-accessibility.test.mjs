@@ -60,10 +60,7 @@ test("public client entries receive the focused catalog from server components",
   assert.match(layout, /<SiteHeader navigation=\{navigation\}/);
   assert.match(homePage, /return <HomePage \/>/);
   assert.doesNotMatch(detail, /ssr:\s*false/);
-  assert.match(
-    catchAll,
-    /<DetailPage initialChains=\{page\.kind === "directory" \? chainDirectory : \[\]\} page=\{page\}/,
-  );
+  assert.match(catchAll, /return <DetailPage page=\{page\} \/>/);
   assert.match(catchAll, /if \(page\.path !== path\)/);
   assert.match(catchAll, /permanentRedirect\(withSearchParams\(`\/\$\{page\.path\}`, query\)\)/);
   assert.match(publicNavigation, /"contact\/upgrade-assurance": "\/review\/start"/);
