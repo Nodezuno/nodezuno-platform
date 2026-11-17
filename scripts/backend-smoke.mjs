@@ -37,9 +37,16 @@ assert.ok(Array.isArray(chains.data.chains));
 const auth = await getJson("/api/v1/auth/providers");
 assert.equal(typeof auth.data.providers.email, "boolean");
 
-const removedProductRoute = await fetch(
-  new URL("/api/v1/rpc/legacy-service", baseUrl),
+const removedProductRouteResponses = await Promise.all(
+  ["GET", "POST"].map((method) =>
+    fetch(new URL("/api/v1/rpc/legacy-service", baseUrl), { method }),
+  ),
 );
-assert.equal(removedProductRoute.status, 404);
+assert.ok(
+  removedProductRouteResponses.every((response) =>
+    [404, 405].includes(response.status),
+  ),
+  "The retired RPC route must not serve requests.",
+);
 
 process.stdout.write("Nodezuno website backend smoke check passed.\n");

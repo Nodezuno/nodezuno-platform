@@ -346,6 +346,8 @@ export async function checkRuntimeConfiguration(): Promise<boolean> {
     typeof zohoSmtpPassword === "string" ? zohoSmtpPassword : undefined,
     typeof zohoSmtpHost === "string" ? zohoSmtpHost : undefined,
   );
+  const deliverableStorageReady =
+    localPreview === "true" || Boolean(deliverablesBucket);
   return Boolean(
     normalizedRateLimitSecret &&
       normalizedBetterAuthSecret &&
@@ -384,7 +386,7 @@ export async function checkRuntimeConfiguration(): Promise<boolean> {
         )) &&
       administratorEmails.length > 0 &&
       notificationDeliveryReady &&
-      Boolean(deliverablesBucket) &&
+      deliverableStorageReady &&
       stablecoinPayments.ready,
   );
 }

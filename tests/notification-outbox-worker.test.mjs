@@ -270,14 +270,13 @@ test("transient provider failures retry without leaking mutable content", async 
 test("provider reconciliation wins a conditional worker failure update", async () => {
   await withDatabase(async (database) => {
     const now = 35_000;
-    const providerMessageId = "e8dc8991-9500-44ae-b753-35d7dcc6bd3c";
+    const providerMessageId = `<nodezuno-${SUBMISSION_OUTBOX_ID.replaceAll("-", "")}@nodezuno.com>`;
     seedSubmission(database, now);
     const result = await processOneOutboxMessage({
       configuration,
       database,
       now,
-      emailSenderImplementation: async (row) => {
-        const providerMessageId = `<nodezuno-${row.deliveryId.replaceAll("-", "")}@nodezuno.com>`;
+      emailSenderImplementation: async () => {
         const reconciled = database
           .prepare(
             `UPDATE notification_outbox
