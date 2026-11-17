@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package nodezuno.ethereum.v1;
+
+option go_package = "github.com/nodezuno/nodezuno.com/services/grpc-gateway/internal/contract/ethereumv1;ethereumv1";
+
+import "google/protobuf/struct.proto";
+
+// EthereumProxy exposes one authenticated unary boundary for explicitly
+// allowlisted Ethereum JSON-RPC methods.
+//
+// CallRequest is represented by google.protobuf.Struct with these fields:
+//   method: required string containing an allowlisted JSON-RPC method
+//   params: optional list containing the JSON-RPC positional parameters
+//   request_id: optional string used as the JSON-RPC identifier
+//
+// CallResponse is represented by google.protobuf.Struct with these fields:
+//   jsonrpc: always "2.0"
+//   request_id: the supplied or server-generated identifier
+//   result: the upstream JSON-RPC result, when the call succeeds
+//   error: the upstream JSON-RPC error object, when the upstream rejects a call
+//
+// Transport, timeout, authentication, admission, and invalid-upstream failures
+// are returned as gRPC status errors. A JSON-RPC error from a valid upstream
+// response is returned in the response error field.
+service EthereumProxy {
+  rpc Call(google.protobuf.Struct) returns (google.protobuf.Struct);
+}

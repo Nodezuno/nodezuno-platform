@@ -1,0 +1,2 @@
+ALTER TABLE `submissions` ADD `submitted_by_account_id` text REFERENCES auth_users(id);--> statement-breakpoint
+CREATE INDEX `submissions_account_created_idx` ON `submissions` (`submitted_by_account_id`,`created_at`);

@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 077
+
+image="$${1:-}"
+bundle_root=/opt/nodezuno/releases/host
+bundle_directory="$bundle_root/${host_bundle_id}"
+stage_directory=""
+activator=""
+
+cleanup() {
+  [[ -z "$stage_directory" ]] || rm -rf "$stage_directory"
+  [[ -z "$activator" ]] || rm -f "$activator"
+}
+trap cleanup EXIT
+
+install_payload() {
+  local mode="$1"
+  local destination="$2"
+  local payload="$3"
+  printf '%s' "$payload" | base64 --decode > "$destination"
+  chmod "$mode" "$destination"
+}
+
+mkdir --parents "$bundle_root"
+exec 8>/run/lock/nodezuno-host-stage.lock
+flock --exclusive 8
+
+if [[ ! -f "$bundle_directory/.complete" ]]; then
+  if [[ -e "$bundle_directory" ]]; then
+    printf 'An incomplete host bundle already exists.\n' >&2
+    exit 78
+  fi
+  stage_directory="$(mktemp -d "$bundle_root/.${host_bundle_id}.XXXXXX")"
+  install_payload 0600 "$stage_directory/compose.yaml" '${compose_base64}'
+  install_payload 0644 "$stage_directory/Caddyfile" '${caddy_config_base64}'
+  install_payload 0600 "$stage_directory/nodezuno-aws-common.sh" '${common_script_base64}'
+  install_payload 0700 "$stage_directory/nodezuno-backup.sh" '${backup_script_base64}'
+  install_payload 0700 "$stage_directory/nodezuno-container-firewall.sh" '${firewall_script_base64}'
+  install_payload 0700 "$stage_directory/nodezuno-deploy.sh" '${deploy_script_base64}'
+  install_payload 0700 "$stage_directory/nodezuno-host-metrics.sh" '${host_metrics_base64}'
+  printf '%s\n' '${deliverable_bucket}' > "$stage_directory/deliverable-bucket"
+  printf '%s\n' '${deliverable_kms_arn}' > "$stage_directory/deliverable-kms-key-arn"
+  chmod 0600 \
+    "$stage_directory/deliverable-bucket" \
+    "$stage_directory/deliverable-kms-key-arn"
+  bash -n "$stage_directory"/*.sh
+  printf '%s\n' '${host_bundle_id}' > "$stage_directory/.complete"
+  chmod 0600 "$stage_directory/.complete"
+  mv --no-target-directory "$stage_directory" "$bundle_directory"
+  stage_directory=""
+fi
+
+flock --unlock 8
+activator="$(mktemp /run/nodezuno-activate.XXXXXX)"
+install_payload 0700 "$activator" '${activator_script_base64}'
+"$activator" "$bundle_directory" "$image"

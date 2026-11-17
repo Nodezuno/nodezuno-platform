@@ -1,0 +1,213 @@
+name: Publish and deploy Nodezuno on AWS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nodezuno-production-release
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Use pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        with:
+          version: 11.9.0
+          run_install: false
+
+      - name: Use Node.js 24 LTS
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24.14.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Verify release source and test discovery
+        run: |
+          pnpm run release:source:verify
+          pnpm run test:discovery
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Enforce production dependency policy
+        run: pnpm audit --prod --audit-level=moderate
+
+      - name: Validate source and contracts
+        run: |
+          pnpm run lint
+          pnpm exec tsc --noEmit --incremental false
+          pnpm test
+
+  publish:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      image: ${{ steps.release.outputs.image }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Assume the exact AWS build role
+        uses: aws-actions/configure-aws-credentials@451ce2a72e8d729a59ebeaacab82dbce58e7af4c
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_BUILD_ROLE_ARN }}
+          role-session-name: nodezuno-build-${{ github.run_id }}
+
+      - name: Sign in to the private registry
+        id: registry
+        uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64
+
+      - name: Configure BuildKit
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+
+      - name: Build and publish the ARM64 release
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: "false"
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: ${{ steps.registry.outputs.registry }}/${{ vars.AWS_ECR_REPOSITORY }}:sha-${{ github.sha }}-run-${{ github.run_id }}-${{ github.run_attempt }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: mode=max
+          sbom: true
+
+      - name: Record the immutable image URI
+        id: release
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+          REGISTRY: ${{ steps.registry.outputs.registry }}
+          REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }}
+        run: printf 'image=%s/%s@%s\n' "$REGISTRY" "$REPOSITORY" "$DIGEST" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve the ARM64 image manifest for scanning
+        id: scan
+        env:
+          IMAGE: ${{ steps.release.outputs.image }}
+        run: |
+          set -Eeuo pipefail
+          manifest="$(docker buildx imagetools inspect "$IMAGE" --raw)"
+          digest="$(jq --exit-status --raw-output '
+            if has("manifests") then
+              [.manifests[] |
+                select(.platform.os == "linux") |
+                select(.platform.architecture == "arm64")][0].digest
+            else
+              empty
+            end
+          ' <<<"$manifest")"
+          test "${digest#sha256:}" != "$digest"
+          test "${#digest}" = 71
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Enforce the ECR vulnerability gate
+        env:
+          DIGEST: ${{ steps.scan.outputs.digest }}
+          REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }}
+        run: |
+          aws ecr wait image-scan-complete \
+            --repository-name "$REPOSITORY" \
+            --image-id imageDigest="$DIGEST"
+          critical="$(aws ecr describe-image-scan-findings \
+            --repository-name "$REPOSITORY" \
+            --image-id imageDigest="$DIGEST" \
+            --query 'imageScanFindings.findingSeverityCounts.CRITICAL' \
+            --output text)"
+          high="$(aws ecr describe-image-scan-findings \
+            --repository-name "$REPOSITORY" \
+            --image-id imageDigest="$DIGEST" \
+            --query 'imageScanFindings.findingSeverityCounts.HIGH' \
+            --output text)"
+          test "${critical:-0}" = "None" || test "${critical:-0}" = "0"
+          test "${high:-0}" = "None" || test "${high:-0}" = "0"
+
+  deploy:
+    needs: publish
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Use Node.js 24 LTS for public smoke checks
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24.14.0
+
+      - name: Assume the approval-bound AWS deployment role
+        uses: aws-actions/configure-aws-credentials@451ce2a72e8d729a59ebeaacab82dbce58e7af4c
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: nodezuno-deploy-${{ github.run_id }}
+
+      - name: Deploy through the restricted SSM document
+        env:
+          IMAGE: ${{ needs.publish.outputs.image }}
+          INSTANCE_ID: ${{ vars.AWS_EC2_INSTANCE_ID }}
+          DOCUMENT_NAME: ${{ vars.AWS_SSM_DEPLOY_DOCUMENT }}
+        run: |
+          set -Eeuo pipefail
+          parameters="$(jq --compact-output --null-input --arg image "$IMAGE" '{Image:[$image]}')"
+          command_id="$(aws ssm send-command \
+            --document-name "$DOCUMENT_NAME" \
+            --instance-ids "$INSTANCE_ID" \
+            --parameters "$parameters" \
+            --query 'Command.CommandId' \
+            --output text)"
+          if ! aws ssm wait command-executed \
+            --command-id "$command_id" \
+            --instance-id "$INSTANCE_ID"; then
+            aws ssm get-command-invocation \
+              --command-id "$command_id" \
+              --instance-id "$INSTANCE_ID" \
+              --query '{Status:Status,Error:StandardErrorContent}'
+            exit 1
+          fi
+          test "$(aws ssm get-command-invocation \
+            --command-id "$command_id" \
+            --instance-id "$INSTANCE_ID" \
+            --query Status \
+            --output text)" = "Success"
+
+      - name: Verify the public release
+        env:
+          PUBLIC_ORIGIN: ${{ vars.PUBLIC_ORIGIN }}
+        run: |
+          curl --fail --show-error --silent --retry 8 --retry-all-errors \
+            --retry-delay 5 "$PUBLIC_ORIGIN/api/v1/live" >/dev/null
+          curl --fail --show-error --silent --retry 8 --retry-all-errors \
+            --retry-delay 5 "$PUBLIC_ORIGIN/api/v1/ready" >/dev/null
+          node scripts/check-public-links.mjs "$PUBLIC_ORIGIN"
+          node scripts/check-external-links.mjs

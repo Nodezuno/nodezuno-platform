@@ -1,0 +1,56 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nodezuno-production",
+  "main": "worker/index.ts",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "nodezuno.com",
+      "custom_domain": true
+    }
+  ],
+  "compatibility_date": "2026-11-16",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1,
+    "redact_query_string": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 0.1,
+      "invocation_logs": false,
+      "persist": true
+    },
+    "traces": {
+      "enabled": false
+    }
+  },
+  "vars": {
+    "PUBLIC_ORIGIN": "https://nodezuno.com",
+    "BETTER_AUTH_URL": "https://nodezuno.com",
+    "NODEZUNO_DOMAIN": "nodezuno.com",
+    "ZOHO_SMTP_HOST": "smtp.zoho.in",
+    "NODEZUNO_LOCAL_PREVIEW": "false",
+    "NODEZUNO_LEGAL_LAUNCH_APPROVED": "false",
+    "NODEZUNO_PUBLIC_INDEXING": "false",
+    "NODEZUNO_STABLECOIN_PAYMENT_MODE": "disabled"
+  },
+  "triggers": {
+    "crons": ["* * * * *"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nodezuno-production",
+      "database_id": "b1215845-a19a-4233-80ea-8fb635a046f2",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "DELIVERABLES",
+      "bucket_name": "nodezuno-deliverables"
+    }
+  ]
+}

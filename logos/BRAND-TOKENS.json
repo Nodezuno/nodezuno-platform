@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "brand": "Nodezuno",
+  "wordmark": "Nodezuno",
+  "colors": {
+    "ink": "#070908",
+    "paper": "#F2F1E9",
+    "lime": "#C7FF45",
+    "aqua": "#60F3D0"
+  },
+  "gradient": {
+    "start": "#C7FF45",
+    "end": "#60F3D0",
+    "direction": "top-left to bottom-right"
+  },
+  "minimumDigitalSize": {
+    "markPixels": 32,
+    "wordmarkWidthPixels": 140
+  },
+  "recommendedClearSpace": "one terminal-node diameter"
+}

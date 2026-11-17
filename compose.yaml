@@ -1,0 +1,51 @@
+services:
+  nodezuno:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env.container
+    environment:
+      NODEZUNO_RUNTIME: container
+      NODEZUNO_LOCAL_PREVIEW: "true"
+      NODEZUNO_INGRESS_MODE: direct
+      NODEZUNO_DATABASE_DRIVER: sqlite
+      NODEZUNO_SQLITE_PATH: /var/lib/nodezuno/nodezuno.sqlite
+      PUBLIC_ORIGIN: http://localhost:3000
+    command:
+      - sh
+      - -c
+      - node scripts/migrate-container.mjs && exec node server.js
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - nodezuno-data:/var/lib/nodezuno
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - const port=process.env.PORT||'3000';fetch('http://127.0.0.1:'+port+'/api/v1/live').then((r)=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  native-grpc:
+    profiles:
+      - native-grpc
+    build:
+      context: ./services/grpc-gateway
+      dockerfile: Dockerfile
+    env_file:
+      - ./services/grpc-gateway/config.env
+    ports:
+      - "127.0.0.1:50051:50051"
+    restart: unless-stopped
+    depends_on:
+      nodezuno:
+        condition: service_healthy
+
+volumes:
+  nodezuno-data:

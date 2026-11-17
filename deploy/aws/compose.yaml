@@ -1,0 +1,221 @@
+services:
+  nodezuno:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    env_file:
+      - ../../.env.production
+    environment:
+      AWS_REGION: ${AWS_REGION:?Set AWS_REGION}
+      HOSTNAME: 0.0.0.0
+      NODEZUNO_DATABASE_DRIVER: sqlite
+      NODEZUNO_DEPLOYMENT_TOPOLOGY: single-host-sqlite
+      NODEZUNO_DELIVERABLE_BUCKET: ${NODEZUNO_DELIVERABLE_BUCKET:?Set NODEZUNO_DELIVERABLE_BUCKET}
+      NODEZUNO_DELIVERABLE_KMS_KEY_ARN: ${NODEZUNO_DELIVERABLE_KMS_KEY_ARN:?Set NODEZUNO_DELIVERABLE_KMS_KEY_ARN}
+      NODEZUNO_BACKGROUND_WORKER_OWNER: systemd-single-host
+      NODEZUNO_INGRESS_MODE: direct
+      NODEZUNO_LOCAL_PREVIEW: "false"
+      NODEZUNO_PROCESS_ROLE: web
+      NODEZUNO_RUNTIME: container
+      NODEZUNO_SQLITE_PATH: /var/lib/nodezuno/nodezuno.sqlite
+      NODEZUNO_WEB_REPLICA_COUNT: "1"
+      PORT: "3000"
+    command:
+      - sh
+      - -c
+      - node scripts/preflight-deployment-topology.mjs web && node scripts/preflight-control-plane.mjs && node scripts/preflight-stablecoin-payments.mjs && node scripts/migrate-container.mjs && exec flock --exclusive --nonblock --no-fork --conflict-exit-code 78 /var/lib/nodezuno/.nodezuno-web.lock node server.js
+    expose:
+      - "3000"
+    volumes:
+      - /opt/nodezuno/data:/var/lib/nodezuno
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - const port=process.env.PORT||'3000';fetch('http://127.0.0.1:'+port+'/api/v1/live').then((r)=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-file: "3"
+        max-size: 10m
+
+  backup:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    profiles:
+      - operations
+    environment:
+      NODEZUNO_DATABASE_DRIVER: sqlite
+      NODEZUNO_SQLITE_PATH: /var/lib/nodezuno/nodezuno.sqlite
+    entrypoint:
+      - node
+      - scripts/backup-sqlite.mjs
+    network_mode: none
+    volumes:
+      - /opt/nodezuno/data:/var/lib/nodezuno:ro
+      - /opt/nodezuno/backups:/var/backups/nodezuno
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 0.5
+
+  restore:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    profiles:
+      - operations
+    environment:
+      NODEZUNO_DATABASE_DRIVER: sqlite
+      NODEZUNO_SQLITE_PATH: /var/lib/nodezuno/nodezuno.sqlite
+    entrypoint:
+      - node
+      - scripts/restore-sqlite.mjs
+    network_mode: none
+    volumes:
+      - /opt/nodezuno/data:/var/lib/nodezuno
+      - /opt/nodezuno/backups:/var/backups/nodezuno:ro
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 0.5
+
+  email-worker:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    profiles:
+      - operations
+    environment:
+      NODEZUNO_BACKGROUND_WORKER_OWNER: systemd-single-host
+      NODEZUNO_DATABASE_DRIVER: sqlite
+      NODEZUNO_DEPLOYMENT_TOPOLOGY: single-host-sqlite
+      NODEZUNO_LOCAL_PREVIEW: "false"
+      NODEZUNO_PROCESS_ROLE: email-worker
+      NODEZUNO_RUNTIME: container
+      NODEZUNO_SQLITE_PATH: /var/lib/nodezuno/nodezuno.sqlite
+      NODEZUNO_WEB_REPLICA_COUNT: "1"
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}
+      REVIEW_CAPABILITY_SECRET: ${REVIEW_CAPABILITY_SECRET:?Set REVIEW_CAPABILITY_SECRET}
+      ZOHO_SMTP_HOST: ${ZOHO_SMTP_HOST:?Set ZOHO_SMTP_HOST}
+      ZOHO_SMTP_PASSWORD: ${ZOHO_SMTP_PASSWORD:?Set ZOHO_SMTP_PASSWORD}
+    entrypoint:
+      - sh
+      - -c
+      - node scripts/preflight-deployment-topology.mjs email-worker && exec node scripts/process-notification-outbox.mjs --once
+    volumes:
+      - /opt/nodezuno/data:/var/lib/nodezuno
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 64
+    mem_limit: 192m
+    cpus: 0.25
+    logging:
+      driver: json-file
+      options:
+        max-file: "3"
+        max-size: 10m
+
+  payment-worker:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    profiles:
+      - operations
+    environment:
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set BETTER_AUTH_URL}
+      NODEZUNO_BACKGROUND_WORKER_OWNER: systemd-single-host
+      NODEZUNO_DATABASE_DRIVER: sqlite
+      NODEZUNO_DEPLOYMENT_TOPOLOGY: single-host-sqlite
+      NODEZUNO_ETHEREUM_RPC_ENDPOINTS_JSON: ${NODEZUNO_ETHEREUM_RPC_ENDPOINTS_JSON-}
+      NODEZUNO_LEGAL_LAUNCH_APPROVED: ${NODEZUNO_LEGAL_LAUNCH_APPROVED:?Set NODEZUNO_LEGAL_LAUNCH_APPROVED}
+      NODEZUNO_LOCAL_PREVIEW: "false"
+      NODEZUNO_PAYMENT_CONFIRMATIONS: ${NODEZUNO_PAYMENT_CONFIRMATIONS:?Set NODEZUNO_PAYMENT_CONFIRMATIONS}
+      NODEZUNO_PROCESS_ROLE: payment-worker
+      NODEZUNO_RUNTIME: container
+      NODEZUNO_SQLITE_PATH: /var/lib/nodezuno/nodezuno.sqlite
+      NODEZUNO_STABLECOIN_PAYMENT_MODE: ${NODEZUNO_STABLECOIN_PAYMENT_MODE:?Set NODEZUNO_STABLECOIN_PAYMENT_MODE}
+      NODEZUNO_WEB_REPLICA_COUNT: "1"
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}
+    entrypoint:
+      - sh
+      - -c
+      - node scripts/preflight-deployment-topology.mjs payment-worker && exec node scripts/process-stablecoin-payments.mjs --once
+    volumes:
+      - /opt/nodezuno/data:/var/lib/nodezuno
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 64
+    mem_limit: 192m
+    cpus: 0.25
+    logging:
+      driver: json-file
+      options:
+        max-file: "3"
+        max-size: 10m
+
+  caddy:
+    image: caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+    environment:
+      CADDY_ACME_EMAIL: ${CADDY_ACME_EMAIL:?Set CADDY_ACME_EMAIL}
+      NODEZUNO_DOMAIN: ${NODEZUNO_DOMAIN:?Set NODEZUNO_DOMAIN}
+    depends_on:
+      nodezuno:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - /opt/nodezuno/caddy/data:/data
+      - /opt/nodezuno/caddy/config:/config
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-file: "3"
+        max-size: 10m

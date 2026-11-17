@@ -1,0 +1,83 @@
+services:
+  - type: web
+    name: nodezuno
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerCommand: sh -c 'node scripts/preflight-control-plane.mjs && node scripts/preflight-stablecoin-payments.mjs && node scripts/migrate-container.mjs && exec node scripts/start-single-container.mjs'
+    healthCheckPath: /api/v1/ready
+    maxShutdownDelaySeconds: 30
+    numInstances: 1
+    envVars:
+      - key: NODEZUNO_RUNTIME
+        value: container
+      - key: NODEZUNO_LOCAL_PREVIEW
+        value: "false"
+      - key: NODEZUNO_LEGAL_LAUNCH_APPROVED
+        value: "false"
+      - key: NODEZUNO_PUBLIC_INDEXING
+        value: "false"
+      - key: NODEZUNO_INGRESS_MODE
+        value: direct
+      - key: NODEZUNO_ALLOW_SCHEMA_BASELINE
+        value: "false"
+      - key: NODEZUNO_ALLOW_CONTRACT_MIGRATIONS
+        value: "false"
+      - key: NODEZUNO_STABLECOIN_PAYMENT_MODE
+        value: disabled
+      - key: NODEZUNO_PAYMENT_CONFIRMATIONS
+        value: "12"
+      - key: NODEZUNO_ETHEREUM_RPC_ENDPOINTS_JSON
+        sync: false
+      - key: NODEZUNO_DATABASE_DRIVER
+        value: sqlite
+      - key: NODEZUNO_SQLITE_PATH
+        value: /var/lib/nodezuno/nodezuno.sqlite
+      - key: PUBLIC_ORIGIN
+        sync: false
+      - key: NODEZUNO_DOMAIN
+        sync: false
+      - key: RATE_LIMIT_SECRET
+        sync: false
+      - key: API_KEY_PEPPER
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        sync: false
+      - key: REVIEW_CAPABILITY_SECRET
+        sync: false
+      - key: BETTER_AUTH_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: ZOHO_SMTP_HOST
+        value: smtp.zoho.in
+      - key: ZOHO_SMTP_PASSWORD
+        sync: false
+      - key: NODEZUNO_RPC_UPSTREAMS_JSON
+        sync: false
+      - key: NODEZUNO_RPC_HOURLY_CALL_QUOTA
+        value: "1000"
+      - key: NODEZUNO_RPC_WORKSPACE_HOURLY_CALL_QUOTA
+        value: "10000"
+      - key: NODEZUNO_GRPC_PUBLIC_ENDPOINT
+        sync: false
+      - key: NODEZUNO_GRPC_AUTH_SECRET
+        sync: false
+      - key: NODEZUNO_ADMIN_EMAILS
+        sync: false
+      - key: AWS_REGION
+        sync: false
+      - key: NODEZUNO_DELIVERABLE_BUCKET
+        sync: false
+      - key: NODEZUNO_DELIVERABLE_KMS_KEY_ARN
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+    disk:
+      name: nodezuno-data
+      mountPath: /var/lib/nodezuno
+      sizeGB: 1

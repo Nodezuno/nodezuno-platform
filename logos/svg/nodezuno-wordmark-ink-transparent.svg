@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="448" viewBox="0 0 460 112" role="img" aria-labelledby="title desc">
+  <title id="title">Transparent ink Nodezuno wordmark</title>
+  <desc id="desc">Dark Nodezuno mark and title-case wordmark for placement on a light field.</desc>
+  <g transform="translate(14 8) rotate(45 48 48)" fill="none" stroke="#070908" stroke-width="3">
+    <path d="M48 24v48M24 48h48"/>
+    <circle cx="48" cy="18" r="6"/>
+    <circle cx="78" cy="48" r="6"/>
+    <circle cx="48" cy="78" r="6"/>
+    <circle cx="18" cy="48" r="6"/>
+  </g>
+  <text x="118" y="72" fill="#070908" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="700" letter-spacing="-2.8">Nodezuno</text>
+</svg>

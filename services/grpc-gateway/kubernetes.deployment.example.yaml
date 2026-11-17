@@ -1,0 +1,150 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodezuno-native-grpc
+  labels:
+    app.kubernetes.io/name: nodezuno-native-grpc
+    app.kubernetes.io/component: gateway
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  minReadySeconds: 10
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nodezuno-native-grpc
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nodezuno-native-grpc
+        app.kubernetes.io/component: gateway
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 35
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: nodezuno-native-grpc
+      containers:
+        - name: gateway
+          image: "REGISTRY.example/nodezuno-native-grpc@sha256:REPLACE_WITH_IMAGE_DIGEST"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: grpc
+              containerPort: 50051
+              protocol: TCP
+          env:
+            - name: GRPC_LISTEN_ADDR
+              value: ":50051"
+            - name: NODEZUNO_GRPC_AUTH_MODE
+              value: control-plane
+            - name: NODEZUNO_GRPC_AUTH_URL
+              value: https://nodezuno.com/api/v1/internal/grpc/authorize
+            - name: NODEZUNO_GRPC_AUTH_TIMEOUT
+              value: 2s
+            - name: GRPC_UPSTREAM_TIMEOUT
+              value: 12s
+            - name: GRPC_SHUTDOWN_TIMEOUT
+              value: 20s
+            - name: GRPC_MAX_REQUEST_BYTES
+              value: "1048576"
+            - name: GRPC_MAX_RESPONSE_BYTES
+              value: "4194304"
+            - name: GRPC_MAX_CONCURRENT_CALLS
+              value: "128"
+            - name: GRPC_ALLOW_INSECURE_UPSTREAM
+              value: "false"
+            - name: LOG_LEVEL
+              value: info
+            - name: ETHEREUM_UPSTREAMS_JSON
+              valueFrom:
+                secretKeyRef:
+                  name: nodezuno-native-grpc-secrets
+                  key: ethereum-upstreams.json
+            - name: NODEZUNO_GRPC_AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nodezuno-native-grpc-secrets
+                  key: control-plane-auth-secret
+          startupProbe:
+            grpc:
+              port: 50051
+              service: nodezuno-native-grpc-liveness
+            timeoutSeconds: 2
+            periodSeconds: 2
+            failureThreshold: 15
+          livenessProbe:
+            grpc:
+              port: 50051
+              service: nodezuno-native-grpc-liveness
+            timeoutSeconds: 2
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            grpc:
+              port: 50051
+              service: nodezuno.ethereum.v1.EthereumProxy
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 2
+            successThreshold: 1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodezuno-native-grpc
+  labels:
+    app.kubernetes.io/name: nodezuno-native-grpc
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: nodezuno-native-grpc
+  ports:
+    - name: grpc
+      port: 50051
+      targetPort: grpc
+      protocol: TCP
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: nodezuno-native-grpc
+  labels:
+    app.kubernetes.io/name: nodezuno-native-grpc
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nodezuno-native-grpc

@@ -1,0 +1,11 @@
+Contact: https://nodezuno.com/community/offchain-bounties
+Contact: mailto:security@nodezuno.com
+Expires: 2027-07-17T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://nodezuno.com/.well-known/security.txt
+Policy: https://nodezuno.com/community/offchain-bounties
+Hiring: https://nodezuno.com/company/careers
+
+# Submit only a high-level summary through public channels.
+# Wait for a restricted evidence channel before sharing exploit material,
+# credentials, personal data, private keys, or other sensitive artifacts.

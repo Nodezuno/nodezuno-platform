@@ -1,0 +1,98 @@
+name: Nodezuno infrastructure checks
+
+on:
+  pull_request:
+    paths:
+      - deploy/aws/**
+      - .github/workflows/aws-release.yml
+      - .github/workflows/infrastructure.yml
+      - .env.production.example
+  push:
+    branches:
+      - main
+    paths:
+      - deploy/aws/**
+      - .github/workflows/aws-release.yml
+      - .github/workflows/infrastructure.yml
+      - .env.production.example
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Use Terraform 1.15.8
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
+        with:
+          terraform_version: 1.15.8
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive deploy/aws/terraform
+
+      - name: Validate the state bootstrap
+        working-directory: deploy/aws/terraform/state-bootstrap
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Validate the production stack
+        working-directory: deploy/aws/terraform/bootstrap
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+  deployment-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Validate shell syntax
+        run: |
+          bash -n deploy/aws/scripts/*.sh
+          perl -pe 's/\$\{(?:app_log_group|aws_region|backup_bucket|backup_script_base64|caddy_config_base64|caddy_log_group|common_script_base64|compose_base64|compose_sha256_arm64|data_volume_id|deploy_script_base64|domain_name|ecr_repository_uri|host_bundle_id|host_metrics_base64|operator_email|parameter_name)\}/SAFE/g; s/\$\$\{/\$\{/g' \
+            deploy/aws/terraform/bootstrap/templates/user-data.sh.tftpl | \
+            bash -n
+          perl -pe 's/\$\{(?:activator_script_base64|backup_script_base64|caddy_config_base64|common_script_base64|compose_base64|deploy_script_base64|host_bundle_id|host_metrics_base64)\}/SAFE/g; s/\$\$\{/\$\{/g' \
+            deploy/aws/terraform/bootstrap/templates/stage-host-bundle.sh.tftpl | \
+            bash -n
+
+      - name: Validate the pinned Caddy configuration
+        run: |
+          docker run --rm \
+            --env CADDY_ACME_EMAIL=info@nodezuno.com \
+            --env NODEZUNO_DOMAIN=nodezuno.com \
+            --volume "$PWD/deploy/aws/Caddy.ec2.conf:/etc/caddy/Caddyfile:ro" \
+            caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d \
+            caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+
+      - name: Verify Caddy cannot read application secrets
+        run: |
+          if sed -n '/^  caddy:/,$p' deploy/aws/compose.ec2.yaml | \
+            grep --quiet '/opt/nodezuno/config/.env.production'; then
+            echo 'Caddy must not receive the application environment file.' >&2
+            exit 1
+          fi
+
+      - name: Validate the rendered EC2 Compose profile
+        env:
+          AWS_REGION: ap-south-1
+          CADDY_ACME_EMAIL: info@nodezuno.com
+          NODEZUNO_APP_LOG_GROUP: /nodezuno/prod/application
+          NODEZUNO_BACKUP_BUCKET: nodezuno-example-backups
+          NODEZUNO_CADDY_LOG_GROUP: /nodezuno/prod/edge
+          NODEZUNO_DOMAIN: nodezuno.com
+          NODEZUNO_APP_ENV_FILE: ../../.env.production.example
+          NODEZUNO_IMAGE: 123456789012.dkr.ecr.ap-south-1.amazonaws.com/nodezuno/web@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+        run: docker compose -f deploy/aws/compose.ec2.yaml config --quiet

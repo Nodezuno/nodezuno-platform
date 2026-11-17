@@ -1,0 +1,111 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1784285061873,
+      "tag": "0000_lowly_prima",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1784307117731,
+      "tag": "0001_high_newton_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1784313890366,
+      "tag": "0002_next_guardsmen",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1784315316587,
+      "tag": "0003_narrow_doorman",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1784316832479,
+      "tag": "0004_lumpy_taskmaster",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1784320631724,
+      "tag": "0005_huge_doorman",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1784347015549,
+      "tag": "0006_lean_magma",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1784351000000,
+      "tag": "0007_shared_grpc",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1784379673172,
+      "tag": "0008_multichain_rpc",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1784380306424,
+      "tag": "0009_rpc_access_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1784382139948,
+      "tag": "0010_developer_idempotency",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1784383611100,
+      "tag": "0011_api_key_rotation",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1784386510787,
+      "tag": "0012_service_updates",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1784393767443,
+      "tag": "0013_smiling_legion",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1785974400000,
+      "tag": "0014_chain_launch_status",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+aws_region      = "ap-south-1"
+domain_name     = "nodezuno.com"
+operator_email  = "info@nodezuno.com"
+instance_type   = "t4g.micro"
+monthly_budget_usd = 30
+
+# Add this after the source is pushed to GitHub.
+github_repository = "your-github-user/nodezuno"
+
+# Set an existing Route 53 public zone ID, or leave empty for external DNS.
+route53_zone_id = ""
+
+common_tags = {
+  CostCenter = "founder"
+  Product    = "upgrade-assurance"
+}

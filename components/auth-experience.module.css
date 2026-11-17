@@ -1,0 +1,347 @@
+.page {
+  --auth-ink: #192d22;
+  --auth-muted: #52665a;
+  --auth-line: #d5dfd8;
+  background: #f1f5f2;
+  color: var(--auth-ink);
+  color-scheme: light;
+  padding: 72px 24px 88px;
+}
+
+.shell {
+  display: grid;
+  width: min(1040px, 100%);
+  margin-inline: auto;
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+  gap: clamp(40px, 7vw, 100px);
+}
+
+.story {
+  padding-top: 40px;
+}
+
+.eyebrow {
+  color: #3d6149;
+  font: 600 .75rem/1.5 var(--font-mono);
+  letter-spacing: .12em;
+}
+
+.story h1 {
+  max-width: 430px;
+  margin: 22px 0 20px;
+  font-size: clamp(2.5rem, 4.6vw, 3.625rem);
+  font-weight: 550;
+  letter-spacing: -.045em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.story p {
+  max-width: 420px;
+  margin: 0;
+  color: var(--auth-muted);
+  font-size: 1.125rem;
+  line-height: 1.7;
+}
+
+.story ul {
+  padding: 0;
+  margin: 38px 0 28px;
+  list-style: none;
+}
+
+.story li {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 15px 0;
+  border-top: 1px solid var(--auth-line);
+  color: #36513f;
+  font-size: .9375rem;
+  line-height: 1.5;
+}
+
+.story li:last-child {
+  border-bottom: 1px solid var(--auth-line);
+}
+
+.story li span {
+  color: #66816e;
+  font: .75rem/1.5 var(--font-mono);
+}
+
+.story .serviceLink {
+  font-size: .875rem;
+}
+
+.serviceLink a {
+  color: #2c5338;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.page .card {
+  min-width: 0;
+  padding: 32px;
+  border: 1px solid var(--auth-line);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 16px 54px rgba(29, 56, 39, .055);
+}
+
+.card :global(.auth-card-heading) {
+  margin-bottom: 24px;
+}
+
+.card :global(.auth-card-heading h2) {
+  margin: 0 0 9px;
+  color: var(--auth-ink);
+  font-size: 1.5rem;
+  font-weight: 550;
+  letter-spacing: -.03em;
+  line-height: 1.25;
+}
+
+.card :global(.auth-card-heading p) {
+  margin: 0;
+  color: var(--auth-muted);
+  font-size: .875rem;
+  line-height: 1.6;
+}
+
+.card :global(.auth-provider-button) {
+  min-height: 52px;
+  padding: 10px 14px;
+  border-color: var(--auth-line);
+  background: #f9fbf9;
+  color: #284432;
+  font-size: .9375rem;
+  font-weight: 550;
+}
+
+.card :global(.auth-provider-button:hover:not(:disabled)) {
+  border-color: #8ca594;
+  background: #f0f5ef;
+  transform: none;
+}
+
+.card :global(.auth-provider-button > span) {
+  border: 0;
+  color: #42664d;
+}
+
+.card :global(.auth-provider-button > i) {
+  color: #637c6b;
+}
+
+.card :global(.auth-provider-help),
+.card :global(.auth-field-help),
+.card :global(.auth-wallet-panel > p) {
+  color: var(--auth-muted);
+  font-size: .8125rem;
+  line-height: 1.6;
+}
+
+.card :global(.auth-wallet-panel) {
+  border-color: var(--auth-line);
+  background: #f4f8f4;
+}
+
+.card :global(.auth-wallet-panel > button) {
+  padding: 12px 8px;
+  border: 0;
+  color: #284432;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+}
+
+.card :global(.auth-wallet-panel > button:hover:not(:disabled)) {
+  background: #e8f0e9;
+}
+
+.card :global(.wallet-network-mark) {
+  border-color: #bbcec0;
+  color: #3a6147;
+  font-size: .6875rem;
+}
+
+.card :global(.auth-wallet-panel strong) {
+  font-size: .875rem;
+  line-height: 1.4;
+}
+
+.card :global(.auth-wallet-panel small) {
+  color: var(--auth-muted);
+  font-size: .75rem;
+  line-height: 1.5;
+}
+
+.card :global(.auth-wallet-panel button > i) {
+  color: #3d6149;
+  font-size: .625rem;
+}
+
+.card :global(.auth-wallet-panel .wallet-security-note) {
+  border-color: var(--auth-line);
+  color: var(--auth-muted);
+}
+
+.card :global(.auth-divider) {
+  margin: 24px 0 20px;
+  color: #667c6d;
+  font-size: .6875rem;
+}
+
+.card :global(.auth-divider::before),
+.card :global(.auth-divider::after) {
+  background: var(--auth-line);
+}
+
+.card :global(.auth-form-help) {
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: none;
+  color: var(--auth-muted);
+  font-size: .8125rem;
+  line-height: 1.6;
+}
+
+.card :global(.auth-email-form) {
+  gap: 20px;
+}
+
+.card :global(.auth-email-form label > span) {
+  color: #304b39;
+  font-family: inherit;
+  font-size: .875rem;
+  font-weight: 550;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.card :global(.auth-email-form input) {
+  min-height: 52px;
+  border-color: #cad8ce;
+  border-radius: 8px;
+  background: #fcfdfc;
+  color: var(--auth-ink);
+  font-size: 1rem;
+}
+
+.card :global(.auth-email-form input::placeholder) {
+  color: #758b7c;
+}
+
+.card :global(.auth-email-form input:focus) {
+  border-color: #55775e;
+}
+
+.card :global(.auth-password-field button) {
+  min-width: 44px;
+  min-height: 44px;
+  color: #365a41;
+  font-family: inherit;
+  font-size: .75rem;
+  text-transform: none;
+}
+
+.card :global(.auth-submit) {
+  min-height: 52px;
+  border: 1px solid #23422e;
+  border-radius: 9px;
+  background: #23422e;
+  color: #f6faf5;
+  box-shadow: none;
+  font-size: .9375rem;
+}
+
+.card :global(.auth-submit:hover:not(:disabled)) {
+  background: #34583e;
+  transform: none;
+}
+
+.card :global(.auth-submit:disabled),
+.card :global(.auth-provider-button:disabled) {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.card :global(.auth-switch),
+.card :global(.auth-recovery-link),
+.card :global(.auth-legal) {
+  color: var(--auth-muted);
+  font-size: .8125rem;
+  line-height: 1.6;
+}
+
+.card :global(.auth-switch a),
+.card :global(.auth-recovery-link a),
+.card :global(.auth-legal a) {
+  color: #2c5338;
+  text-decoration-color: #9ab3a2;
+}
+
+.card :global(.auth-legal) {
+  padding-top: 16px;
+  border-top: 1px solid var(--auth-line);
+  margin-top: 20px;
+  font-size: .75rem;
+}
+
+.card :global(.auth-error) {
+  padding: 13px 15px;
+  border-color: #e7c9c3;
+  margin-top: 16px;
+  background: #fff5f2;
+  color: #91382c;
+  font-size: .8125rem;
+  overflow-wrap: anywhere;
+}
+
+.card :global(.auth-email-unavailable) {
+  border-color: #e2d6b8;
+  background: #fffbf2;
+}
+
+.card :global(.auth-email-unavailable strong) {
+  color: #785726;
+  font-size: .875rem;
+}
+
+.card :global(.auth-email-unavailable p) {
+  color: #715e3d;
+  font-size: .8125rem;
+  line-height: 1.65;
+}
+
+.page :where(a, button, input):focus-visible {
+  outline: 2px solid #507346;
+  outline-offset: 4px;
+}
+
+@media (max-width: 800px) {
+  .page { padding: 42px 24px 64px; }
+  .shell { max-width: 520px; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .story { padding-top: 0; }
+  .story h1 { max-width: none; margin: 16px 0 12px; font-size: 2.5rem; }
+  .story p { font-size: 1rem; }
+  .story ul { display: none; }
+  .story .serviceLink { margin-top: 16px; font-size: .8125rem; }
+}
+
+@media (max-width: 420px) {
+  .page { padding-inline: 16px; }
+  .page .card { padding: 24px 20px; border-radius: 14px; }
+  .card :global(.auth-wallet-panel > button) { grid-template-columns: 38px minmax(0, 1fr); }
+  .card :global(.auth-wallet-panel button > i) { grid-column: 2; grid-row: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page * { transition: none !important; }
+}
+
+@media (forced-colors: active) {
+  .page .card, .card :global(.auth-submit), .card :global(.auth-provider-button) { border-color: ButtonText; }
+  .page :where(a, button, input):focus-visible { outline-color: Highlight; }
+}

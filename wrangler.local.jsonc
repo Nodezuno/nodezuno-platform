@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nodezuno-local",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-16",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nodezuno-production",
+      "database_id": "b1215845-a19a-4233-80ea-8fb635a046f2",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "DELIVERABLES",
+      "bucket_name": "nodezuno-deliverables"
+    }
+  ]
+}

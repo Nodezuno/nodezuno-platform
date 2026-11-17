@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="448" viewBox="0 0 460 112" role="img" aria-labelledby="title desc">
+  <title id="title">Nodezuno wordmark on paper</title>
+  <desc id="desc">Nodezuno mark and title-case dark wordmark on a paper-colored field.</desc>
+  <rect width="460" height="112" fill="#F2F1E9"/>
+  <rect x="12" y="8" width="96" height="96" rx="16" fill="#070908"/>
+  <defs>
+    <linearGradient id="gradient" x1="16" y1="12" x2="96" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C7FF45"/>
+      <stop offset="1" stop-color="#60F3D0"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(12 8) rotate(45 48 48)" fill="none" stroke="url(#gradient)" stroke-width="3">
+    <path d="M48 24v48M24 48h48"/>
+    <circle cx="48" cy="18" r="6" fill="#070908"/>
+    <circle cx="78" cy="48" r="6" fill="#070908"/>
+    <circle cx="48" cy="78" r="6" fill="#070908"/>
+    <circle cx="18" cy="48" r="6" fill="#070908"/>
+  </g>
+  <text x="124" y="72" fill="#070908" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="700" letter-spacing="-2.8">Nodezuno</text>
+</svg>

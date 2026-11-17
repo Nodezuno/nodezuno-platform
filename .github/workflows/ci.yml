@@ -1,0 +1,265 @@
+name: Nodezuno release checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nodezuno-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
+
+  application:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Use pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        with:
+          version: 11.9.0
+          run_install: false
+
+      - name: Use Node.js 24 LTS
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24.14.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Verify clean release source and immutable actions
+        run: pnpm run release:source:verify
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level=moderate
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Check types
+        run: pnpm exec tsc --noEmit --incremental false
+
+      - name: Apply fresh local D1 migrations
+        run: pnpm run db:migrate:local
+
+      - name: Build Sites and run all tests
+        run: pnpm test
+
+      - name: Reject local secrets from Cloudflare artifacts
+        run: pnpm run verify:cloudflare-artifact
+
+      - name: Validate generated Cloudflare Worker without deploying
+        run: pnpm exec wrangler deploy --dry-run --config dist/server/wrangler.json
+
+      - name: Build standalone container application
+        run: pnpm run build:container
+
+      - name: Exercise the local customer journey
+        shell: bash
+        run: |
+          printf '%s\n' \
+            'RATE_LIMIT_SECRET=ci-rate-limit-7c4e91b2f8a563d09e17c42b' \
+            'API_KEY_PEPPER=ci-api-pepper-1a8f73d4c29e650b7d91e36c' \
+            'BETTER_AUTH_SECRET=ci-auth-secret-6e2b94f1c8073a5d29e14f68' \
+            'REVIEW_CAPABILITY_SECRET=ci-review-capability-f43a0de76b9512c8e6d70a24' \
+            'BETTER_AUTH_URL=http://localhost:3000' \
+            'NODEZUNO_LOCAL_PREVIEW=true' \
+            'NODEZUNO_ADMIN_EMAILS=info@nodezuno.com' \
+            'NODEZUNO_ENABLE_LEGACY_HOSTING_IDENTITY=true' \
+            > .dev.vars
+          pnpm run dev -- --port 3000 > /tmp/nodezuno-dev.log 2>&1 &
+          server_pid=$!
+          cleanup() {
+            kill "$server_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent \
+              http://127.0.0.1:3000/api/v1/ready > /dev/null; then
+              break
+            fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              cat /tmp/nodezuno-dev.log
+              exit 1
+            fi
+            if [ "$attempt" = "60" ]; then
+              cat /tmp/nodezuno-dev.log
+              exit 1
+            fi
+            sleep 1
+          done
+          pnpm run smoke:links -- http://127.0.0.1:3000
+          pnpm run smoke:auth -- http://127.0.0.1:3000
+          pnpm run smoke:self-service -- http://127.0.0.1:3000
+          pnpm run smoke:local
+
+  native-grpc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: services/grpc-gateway
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Use Node.js 24 LTS
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24.14.0
+
+      - name: Use Go 1.26.5
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version: 1.26.5
+          cache-dependency-path: services/grpc-gateway/go.sum
+
+      - name: Check native gRPC formatting
+        run: test -z "$(gofmt -l .)"
+
+      - name: Verify the protobuf service contract
+        run: node ./scripts/verify-contract.mjs
+
+      - name: Vet the native gRPC boundary
+        run: go vet ./...
+
+      - name: Test the native gRPC boundary
+        run: go test -race ./...
+
+      - name: Build the native gRPC server
+        run: go build ./cmd/server
+
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Build production image
+        run: docker build --tag nodezuno-ci:${{ github.sha }} .
+
+      - name: Start production image
+        run: >-
+          docker run --detach
+          --name nodezuno-ci
+          --publish 127.0.0.1:38080:3000
+          nodezuno-ci:${{ github.sha }}
+
+      - name: Verify container liveness
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:38080/api/v1/live; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs nodezuno-ci
+          exit 1
+
+      - name: Verify container fail-closed boundaries
+        run: |
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            http://127.0.0.1:38080/api/v1/ready)" = "503"
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            http://127.0.0.1:38080/api/v1/status)" = "403"
+
+      - name: Start persistent SQLite container profile
+        run: |
+          docker volume create nodezuno-sqlite-ci
+          docker run --detach \
+            --name nodezuno-sqlite-ci \
+            --publish 127.0.0.1:38081:3000 \
+            --mount source=nodezuno-sqlite-ci,target=/var/lib/nodezuno \
+            --env NODEZUNO_RUNTIME=container \
+            --env NODEZUNO_LOCAL_PREVIEW=false \
+            --env NODEZUNO_DOMAIN=ci.nodezuno.com \
+            --env NODEZUNO_LEGAL_LAUNCH_APPROVED=false \
+            --env NODEZUNO_PUBLIC_INDEXING=false \
+            --env NODEZUNO_INGRESS_MODE=direct \
+            --env NODEZUNO_DATABASE_DRIVER=sqlite \
+            --env NODEZUNO_SQLITE_PATH=/var/lib/nodezuno/nodezuno.sqlite \
+            --env PUBLIC_ORIGIN=https://ci.nodezuno.com \
+            --env BETTER_AUTH_URL=https://ci.nodezuno.com \
+            --env RATE_LIMIT_SECRET=ci-rate-limit-7c4e91b2f8a563d09e17c42b \
+            --env API_KEY_PEPPER=ci-api-pepper-1a8f73d4c29e650b7d91e36c \
+            --env BETTER_AUTH_SECRET=ci-auth-secret-6e2b94f1c8073a5d29e14f68 \
+            --env REVIEW_CAPABILITY_SECRET=ci-review-capability-f43a0de76b9512c8e6d70a24 \
+            --env ZOHO_SMTP_HOST=smtp.zoho.in \
+            --env ZOHO_SMTP_PASSWORD=ci-zoho-app-password-placeholder \
+            --env NODEZUNO_ADMIN_EMAILS=info@nodezuno.com \
+            --env AWS_REGION=ap-south-1 \
+            --env NODEZUNO_DELIVERABLE_BUCKET=nodezuno-ci-deliverables \
+            --env NODEZUNO_DELIVERABLE_KMS_KEY_ARN=arn:aws:kms:ap-south-1:123456789012:key/11111111-1111-4111-8111-111111111111 \
+            nodezuno-ci:${{ github.sha }} \
+            sh -c 'node scripts/migrate-container.mjs && exec node server.js'
+
+      - name: Verify persistent SQLite readiness
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent \
+              http://127.0.0.1:38081/api/v1/ready; then
+              docker exec nodezuno-sqlite-ci \
+                test -s /var/lib/nodezuno/nodezuno.sqlite
+              test "$(curl --silent --output /dev/null \
+                --write-out '%{http_code}' \
+                --header 'Host: ci.nodezuno.com' \
+                --header 'X-Forwarded-Proto: https' \
+                http://127.0.0.1:38081/api/v1/status)" = "200"
+              test "$(curl --silent --output /dev/null \
+                --write-out '%{http_code}' \
+                --header 'Host: attacker.invalid' \
+                --header 'X-Forwarded-Proto: https' \
+                http://127.0.0.1:38081/api/v1/status)" = "403"
+              exit 0
+            fi
+            if ! docker inspect --format '{{.State.Running}}' \
+              nodezuno-sqlite-ci | grep --quiet true; then
+              docker logs nodezuno-sqlite-ci
+              exit 1
+            fi
+            sleep 1
+          done
+          docker logs nodezuno-sqlite-ci
+          exit 1
+
+      - name: Build native gRPC image
+        run: docker build --tag nodezuno-grpc-ci:${{ github.sha }} services/grpc-gateway
+
+      - name: Stop production images
+        if: always()
+        run: |
+          docker rm --force nodezuno-ci 2>/dev/null || true
+          docker rm --force nodezuno-sqlite-ci 2>/dev/null || true
+          docker volume rm nodezuno-sqlite-ci 2>/dev/null || true

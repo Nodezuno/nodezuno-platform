@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">Transparent Nodezuno gradient mark</title>
+  <desc id="desc">Four connected nodes in the Nodezuno lime-to-aqua gradient with a transparent background.</desc>
+  <defs>
+    <linearGradient id="gradient" x1="12" y1="12" x2="84" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C7FF45"/>
+      <stop offset="1" stop-color="#60F3D0"/>
+    </linearGradient>
+  </defs>
+  <g transform="rotate(45 48 48)" fill="none" stroke="url(#gradient)" stroke-width="3">
+    <path d="M48 22v52M22 48h52"/>
+    <circle cx="48" cy="16" r="6"/>
+    <circle cx="80" cy="48" r="6"/>
+    <circle cx="48" cy="80" r="6"/>
+    <circle cx="16" cy="48" r="6"/>
+  </g>
+</svg>

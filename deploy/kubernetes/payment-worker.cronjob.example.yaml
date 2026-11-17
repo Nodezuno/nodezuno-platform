@@ -1,0 +1,72 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nodezuno-payment-worker
+  labels:
+    app.kubernetes.io/name: nodezuno-payment-worker
+    app.kubernetes.io/component: payment-verification
+spec:
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 150
+      backoffLimit: 1
+      ttlSecondsAfterFinished: 300
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: nodezuno-payment-worker
+            app.kubernetes.io/component: payment-verification
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          enableServiceLinks: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            fsGroup: 1001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: worker
+              image: "REGISTRY.example/nodezuno-web@sha256:REPLACE_WITH_IMAGE_DIGEST"
+              imagePullPolicy: IfNotPresent
+              command:
+                - node
+                - scripts/process-stablecoin-payments.mjs
+                - --once
+              envFrom:
+                - configMapRef:
+                    name: nodezuno-web-config
+                - secretRef:
+                    name: nodezuno-web-secrets
+              volumeMounts:
+                - name: data
+                  mountPath: /var/lib/nodezuno
+                - name: temporary
+                  mountPath: /tmp
+              resources:
+                requests:
+                  cpu: 25m
+                  memory: 64Mi
+                limits:
+                  cpu: 250m
+                  memory: 192Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                privileged: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: nodezuno-web-data
+            - name: temporary
+              emptyDir:
+                sizeLimit: 32Mi

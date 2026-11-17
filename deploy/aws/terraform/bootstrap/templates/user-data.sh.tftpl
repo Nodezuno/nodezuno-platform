@@ -1,0 +1,227 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+umask 077
+
+exec > >(tee /var/log/nodezuno-bootstrap.log | logger -t nodezuno-bootstrap -s 2>/dev/console) 2>&1
+
+dnf install --assumeyes docker jq xfsprogs
+systemctl enable --now docker
+systemctl enable --now amazon-ssm-agent
+
+install -d -m 0755 /usr/local/lib/docker/cli-plugins
+curl --fail --location --silent --show-error \
+  https://github.com/docker/compose/releases/download/v2.39.2/docker-compose-linux-aarch64 \
+  --output /usr/local/lib/docker/cli-plugins/docker-compose
+printf '%s  %s\n' \
+  '${compose_sha256_arm64}' \
+  /usr/local/lib/docker/cli-plugins/docker-compose | sha256sum --check --strict
+chmod 0755 /usr/local/lib/docker/cli-plugins/docker-compose
+docker compose version
+
+install -d -m 0755 /etc/docker
+printf '%s\n' \
+  '{' \
+  '  "live-restore": true,' \
+  '  "no-new-privileges": true' \
+  '}' > /etc/docker/daemon.json
+systemctl restart docker
+
+if ! swapon --show=NAME --noheadings | grep --quiet .; then
+  fallocate --length 1G /swapfile
+  chmod 0600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  printf '%s\n' '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+
+volume_id='${data_volume_id}'
+volume_id_compact="$${volume_id//-/}"
+volume_link="/dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_$${volume_id_compact}"
+for attempt in $(seq 1 180); do
+  if [[ -e "$${volume_link}" ]]; then
+    break
+  fi
+  if [[ "$${attempt}" = 180 ]]; then
+    printf 'The Nodezuno data volume did not attach.\n' >&2
+    exit 1
+  fi
+  sleep 2
+done
+
+volume_device="$(readlink --canonicalize-existing "$${volume_link}")"
+if ! blkid "$${volume_device}" >/dev/null 2>&1; then
+  mkfs.xfs -f -L NODEZUNO_DATA "$${volume_device}"
+fi
+
+install -d -m 0755 /opt/nodezuno
+volume_uuid="$(blkid --match-tag UUID --output value "$${volume_device}")"
+if ! grep --quiet "UUID=$${volume_uuid}" /etc/fstab; then
+  printf 'UUID=%s /opt/nodezuno xfs defaults,nofail,nodev,nosuid,noexec,x-systemd.device-timeout=180 0 2\n' \
+    "$${volume_uuid}" >> /etc/fstab
+fi
+mountpoint --quiet /opt/nodezuno || mount /opt/nodezuno
+
+install -d -m 0700 /opt/nodezuno/config
+install -d -m 0750 /opt/nodezuno/caddy
+install -d -m 0700 /opt/nodezuno/caddy/config /opt/nodezuno/caddy/data
+install -d -m 0700 -o 1001 -g 1001 /opt/nodezuno/data /opt/nodezuno/backups
+install -d -m 0700 /opt/nodezuno/releases /opt/nodezuno/releases/host
+
+install_base64() {
+  local mode="$1"
+  local destination="$2"
+  local payload="$3"
+  printf '%s' "$${payload}" | base64 --decode > "$${destination}"
+  chmod "$${mode}" "$${destination}"
+}
+
+host_bundle_dir='/opt/nodezuno/releases/host/${host_bundle_id}'
+install -d -m 0700 "$${host_bundle_dir}"
+install_base64 0600 "$${host_bundle_dir}/compose.yaml" '${compose_base64}'
+install_base64 0644 "$${host_bundle_dir}/Caddyfile" '${caddy_config_base64}'
+install_base64 0600 "$${host_bundle_dir}/nodezuno-aws-common.sh" '${common_script_base64}'
+install_base64 0700 "$${host_bundle_dir}/nodezuno-backup.sh" '${backup_script_base64}'
+install_base64 0700 "$${host_bundle_dir}/nodezuno-container-firewall.sh" '${firewall_script_base64}'
+install_base64 0700 "$${host_bundle_dir}/nodezuno-deploy.sh" '${deploy_script_base64}'
+install_base64 0700 "$${host_bundle_dir}/nodezuno-host-metrics.sh" '${host_metrics_base64}'
+printf '%s\n' '${deliverable_bucket}' > "$${host_bundle_dir}/deliverable-bucket"
+printf '%s\n' '${deliverable_kms_arn}' > "$${host_bundle_dir}/deliverable-kms-key-arn"
+chmod 0600 \
+  "$${host_bundle_dir}/deliverable-bucket" \
+  "$${host_bundle_dir}/deliverable-kms-key-arn"
+printf '%s\n' '${host_bundle_id}' > "$${host_bundle_dir}/.complete"
+chmod 0600 "$${host_bundle_dir}/.complete"
+ln --symbolic "$${host_bundle_dir}" /opt/nodezuno/host-current
+
+printf '%s\n' '${ecr_repository_uri}' > /opt/nodezuno/ecr-repository-uri
+printf '%s\n' '${parameter_name}' > /opt/nodezuno/ssm-parameter-name
+printf '%s\n' '${backup_bucket}' > /opt/nodezuno/backup-bucket
+printf '%s\n' '${deliverable_bucket}' > /opt/nodezuno/deliverable-bucket
+printf '%s\n' '${deliverable_kms_arn}' > /opt/nodezuno/deliverable-kms-key-arn
+printf '%s\n' '${app_log_group}' > /opt/nodezuno/app-log-group
+printf '%s\n' '${caddy_log_group}' > /opt/nodezuno/caddy-log-group
+chmod 0600 \
+  /opt/nodezuno/ecr-repository-uri \
+  /opt/nodezuno/ssm-parameter-name \
+  /opt/nodezuno/backup-bucket \
+  /opt/nodezuno/deliverable-bucket \
+  /opt/nodezuno/deliverable-kms-key-arn \
+  /opt/nodezuno/app-log-group \
+  /opt/nodezuno/caddy-log-group
+
+printf '%s\n' \
+  'AWS_REGION=${aws_region}' \
+  'CADDY_ACME_EMAIL=${operator_email}' \
+  'NODEZUNO_DOMAIN=${domain_name}' \
+  'NODEZUNO_BACKUP_BUCKET=${backup_bucket}' \
+  'NODEZUNO_BACKUP_PREFIX=production' \
+  > /opt/nodezuno/host.env
+chmod 0600 /opt/nodezuno/host.env
+
+install -m 0755 \
+  "$${host_bundle_dir}/nodezuno-container-firewall.sh" \
+  /usr/local/sbin/nodezuno-container-firewall
+install -d -m 0755 \
+  /etc/systemd/system/docker.service.d \
+  /etc/systemd/system/nodezuno.service.d
+printf '%s\n' \
+  '[Service]' \
+  'ExecStartPost=/usr/bin/bash /usr/local/sbin/nodezuno-container-firewall' \
+  > /etc/systemd/system/docker.service.d/20-nodezuno-container-firewall.conf
+printf '%s\n' \
+  '[Service]' \
+  'ExecStartPre=/usr/bin/bash /usr/local/sbin/nodezuno-container-firewall' \
+  > /etc/systemd/system/nodezuno.service.d/20-nodezuno-container-firewall.conf
+chmod 0644 \
+  /etc/systemd/system/docker.service.d/20-nodezuno-container-firewall.conf \
+  /etc/systemd/system/nodezuno.service.d/20-nodezuno-container-firewall.conf
+
+bash /usr/local/sbin/nodezuno-container-firewall
+
+printf '%s\n' \
+  '[Unit]' \
+  'Description=Nodezuno production containers' \
+  'After=docker.service network-online.target local-fs.target' \
+  'Wants=network-online.target' \
+  'Requires=docker.service' \
+  'RequiresMountsFor=/opt/nodezuno' \
+  'ConditionPathExists=/opt/nodezuno/runtime.env' \
+  'ConditionPathExists=/opt/nodezuno/config/.env.production' \
+  'ConditionPathExists=/opt/nodezuno/config/.env.email-worker' \
+  'ConditionPathExists=/opt/nodezuno/config/.env.payment-worker' \
+  '' \
+  '[Service]' \
+  'Type=oneshot' \
+  'RemainAfterExit=yes' \
+  'EnvironmentFile=/opt/nodezuno/host.env' \
+  'ExecStart=/usr/bin/docker compose --project-directory /opt/nodezuno --env-file /opt/nodezuno/runtime.env --file /opt/nodezuno/host-current/compose.yaml up --detach --remove-orphans' \
+  'ExecStop=/usr/bin/docker compose --project-directory /opt/nodezuno --env-file /opt/nodezuno/runtime.env --file /opt/nodezuno/host-current/compose.yaml stop' \
+  'TimeoutStartSec=300' \
+  'TimeoutStopSec=90' \
+  '' \
+  '[Install]' \
+  'WantedBy=multi-user.target' \
+  > /etc/systemd/system/nodezuno.service
+
+printf '%s\n' \
+  '[Unit]' \
+  'Description=Create and upload a verified Nodezuno database backup' \
+  'After=nodezuno.service network-online.target' \
+  'RequiresMountsFor=/opt/nodezuno' \
+  'ConditionPathExists=/opt/nodezuno/runtime.env' \
+  '' \
+  '[Service]' \
+  'Type=oneshot' \
+  'EnvironmentFile=/opt/nodezuno/host.env' \
+  'ExecStart=/usr/bin/flock --exclusive --nonblock --conflict-exit-code 0 /run/lock/nodezuno-background.lock /usr/bin/bash /opt/nodezuno/host-current/nodezuno-backup.sh scheduled' \
+  'Nice=10' \
+  'IOSchedulingClass=best-effort' \
+  'IOSchedulingPriority=7' \
+  > /etc/systemd/system/nodezuno-backup.service
+
+printf '%s\n' \
+  '[Unit]' \
+  'Description=Run a verified Nodezuno database backup every six hours' \
+  '' \
+  '[Timer]' \
+  'OnBootSec=20min' \
+  'OnUnitActiveSec=6h' \
+  'RandomizedDelaySec=5min' \
+  'Persistent=true' \
+  '' \
+  '[Install]' \
+  'WantedBy=timers.target' \
+  > /etc/systemd/system/nodezuno-backup.timer
+
+printf '%s\n' \
+  '[Unit]' \
+  'Description=Publish lightweight Nodezuno host metrics' \
+  'After=docker.service' \
+  'RequiresMountsFor=/opt/nodezuno' \
+  '' \
+  '[Service]' \
+  'Type=oneshot' \
+  'EnvironmentFile=/opt/nodezuno/host.env' \
+  'ExecStart=/usr/bin/bash /opt/nodezuno/host-current/nodezuno-host-metrics.sh' \
+  'TimeoutStartSec=30' \
+  > /etc/systemd/system/nodezuno-metrics.service
+
+printf '%s\n' \
+  '[Unit]' \
+  'Description=Publish Nodezuno host metrics every five minutes' \
+  '' \
+  '[Timer]' \
+  'OnBootSec=5min' \
+  'OnUnitActiveSec=5min' \
+  'RandomizedDelaySec=30s' \
+  'Persistent=true' \
+  '' \
+  '[Install]' \
+  'WantedBy=timers.target' \
+  > /etc/systemd/system/nodezuno-metrics.timer
+
+systemctl daemon-reload
+systemctl enable nodezuno.service nodezuno-backup.timer nodezuno-metrics.timer
+systemctl start nodezuno-backup.timer nodezuno-metrics.timer
+
+printf 'Nodezuno host bootstrap completed. Create the SecureString and deploy an image through SSM.\n'

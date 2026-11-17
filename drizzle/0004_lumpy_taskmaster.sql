@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX `developer_workspace_members_owner_account_unique` ON `developer_workspace_members` (`account_id`) WHERE "developer_workspace_members"."role" = 'owner' AND "developer_workspace_members"."account_id" IS NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX `developer_workspace_members_owner_email_unique` ON `developer_workspace_members` (`email`) WHERE "developer_workspace_members"."role" = 'owner' AND "developer_workspace_members"."email" IS NOT NULL;

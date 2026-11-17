@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nodezuno-web-config
+  labels:
+    app.kubernetes.io/name: nodezuno-web
+    app.kubernetes.io/component: control-plane
+data:
+  NODE_ENV: production
+  NODEZUNO_RUNTIME: container
+  NODEZUNO_LOCAL_PREVIEW: "false"
+  NODEZUNO_LEGAL_LAUNCH_APPROVED: "false"
+  NODEZUNO_PUBLIC_INDEXING: "false"
+  NODEZUNO_INGRESS_MODE: direct
+  NODEZUNO_ALLOW_SCHEMA_BASELINE: "false"
+  NODEZUNO_ALLOW_CONTRACT_MIGRATIONS: "false"
+  NODEZUNO_STABLECOIN_PAYMENT_MODE: disabled
+  NODEZUNO_PAYMENT_CONFIRMATIONS: "12"
+  NODEZUNO_DATABASE_DRIVER: sqlite
+  NODEZUNO_SQLITE_PATH: /var/lib/nodezuno/nodezuno.sqlite
+  AWS_REGION: ap-south-1
+  NODEZUNO_DOMAIN: replace.invalid
+  PUBLIC_ORIGIN: https://replace.invalid
+  BETTER_AUTH_URL: https://replace.invalid
+  HOSTNAME: 0.0.0.0
+  PORT: "3000"
