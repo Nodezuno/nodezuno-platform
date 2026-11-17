@@ -17,6 +17,7 @@ export const legacyPublicAliases: Readonly<Record<string, string>> = {
   "community/offchain-bounties": "/security/responsible-disclosure",
   "community/onchain-bounties": "/security/responsible-disclosure",
   "community/discord": "/company/contact",
+  "products/rpc-api": "/product",
 };
 
 export const permanentPublicRedirects: Readonly<Record<string, string>> = {
