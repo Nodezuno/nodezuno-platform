@@ -7,6 +7,7 @@ import { HttpProblem } from "./http.ts";
 import {
   allowsLocalUnverifiedEmailAuthentication,
   allValuesAreDistinct,
+  constantTimeStringEqual,
   isOperationalEmailAddress,
   isContainerRuntime,
   normalizeApplicationOrigin,

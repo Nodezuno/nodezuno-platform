@@ -563,7 +563,10 @@ function normalizeClientAddress(value: string | null): string | null {
   }
 }
 
-function constantTimeStringEqual(left: string, right: string): boolean {
+export function constantTimeStringEqual(
+  left: string,
+  right: string,
+): boolean {
   const length = Math.max(left.length, right.length);
   let mismatch = left.length ^ right.length;
   for (let index = 0; index < length; index += 1) {
