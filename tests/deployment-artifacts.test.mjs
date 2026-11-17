@@ -272,6 +272,10 @@ test("managed deployment fails closed and checks full readiness", async () => {
   ]) {
     assert.match(continuousIntegration, new RegExp(`pnpm run ${smoke}`));
   }
+  assert.match(
+    continuousIntegration,
+    /pnpm run smoke:auth -- http:\/\/127\.0\.0\.1:3000/,
+  );
   assert.equal(
     packageJson.scripts["preflight:application"],
     "node scripts/preflight-review-application.mjs",
@@ -762,7 +766,7 @@ test("container build context excludes local and production secrets", async () =
 test("backend smoke is local-only and covers current public services", async () => {
   const smoke = await source("scripts/backend-smoke.mjs");
 
-  assert.match(smoke, /refuses non-loopback targets/);
+  assert.match(smoke, /refuses non-loopback host/);
   assert.match(smoke, /\/api\/v1\/status/);
   assert.match(smoke, /\/api\/v1\/chains/);
   assert.match(smoke, /\/api\/v1\/auth\/providers/);
