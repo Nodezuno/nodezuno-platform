@@ -86,7 +86,6 @@ jobs:
         run: |
           printf '%s\n' \
             'RATE_LIMIT_SECRET=ci-rate-limit-7c4e91b2f8a563d09e17c42b' \
-            'API_KEY_PEPPER=ci-api-pepper-1a8f73d4c29e650b7d91e36c' \
             'BETTER_AUTH_SECRET=ci-auth-secret-6e2b94f1c8073a5d29e14f68' \
             'REVIEW_CAPABILITY_SECRET=ci-review-capability-f43a0de76b9512c8e6d70a24' \
             'BETTER_AUTH_URL=http://localhost:3000' \
@@ -117,46 +116,7 @@ jobs:
           done
           pnpm run smoke:links -- http://127.0.0.1:3000
           pnpm run smoke:auth -- http://127.0.0.1:3000
-          pnpm run smoke:self-service -- http://127.0.0.1:3000
           pnpm run smoke:local
-
-  native-grpc:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    defaults:
-      run:
-        working-directory: services/grpc-gateway
-    steps:
-      - name: Check out source
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Use Node.js 24 LTS
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          node-version: 24.14.0
-
-      - name: Use Go 1.26.5
-        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
-        with:
-          go-version: 1.26.5
-          cache-dependency-path: services/grpc-gateway/go.sum
-
-      - name: Check native gRPC formatting
-        run: test -z "$(gofmt -l .)"
-
-      - name: Verify the protobuf service contract
-        run: node ./scripts/verify-contract.mjs
-
-      - name: Vet the native gRPC boundary
-        run: go vet ./...
-
-      - name: Test the native gRPC boundary
-        run: go test -race ./...
-
-      - name: Build the native gRPC server
-        run: go build ./cmd/server
 
   image:
     runs-on: ubuntu-latest
@@ -213,7 +173,6 @@ jobs:
             --env PUBLIC_ORIGIN=https://ci.nodezuno.com \
             --env BETTER_AUTH_URL=https://ci.nodezuno.com \
             --env RATE_LIMIT_SECRET=ci-rate-limit-7c4e91b2f8a563d09e17c42b \
-            --env API_KEY_PEPPER=ci-api-pepper-1a8f73d4c29e650b7d91e36c \
             --env BETTER_AUTH_SECRET=ci-auth-secret-6e2b94f1c8073a5d29e14f68 \
             --env REVIEW_CAPABILITY_SECRET=ci-review-capability-f43a0de76b9512c8e6d70a24 \
             --env ZOHO_SMTP_HOST=smtp.zoho.in \
@@ -253,9 +212,6 @@ jobs:
           done
           docker logs nodezuno-sqlite-ci
           exit 1
-
-      - name: Build native gRPC image
-        run: docker build --tag nodezuno-grpc-ci:${{ github.sha }} services/grpc-gateway
 
       - name: Stop production images
         if: always()

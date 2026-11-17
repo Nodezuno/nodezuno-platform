@@ -23,7 +23,6 @@ export default function robots(): MetadataRoute.Robots {
         "/account",
         "/admin",
         "/api",
-        "/console",
         "/forgot-password",
         "/identity-required",
         "/login",

@@ -10,7 +10,6 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 const generatedConfig = path.join(repositoryRoot, "dist/server/wrangler.json");
 const bootstrapConfig = path.join(repositoryRoot, "dist/server/wrangler.bootstrap.json");
 const expectedSecrets = [
-  "API_KEY_PEPPER",
   "BETTER_AUTH_SECRET",
   "RATE_LIMIT_SECRET",
   "ZOHO_SMTP_PASSWORD",

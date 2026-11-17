@@ -32,7 +32,7 @@ test("production image uses the locked workspace policy and a non-root runtime",
   );
   assert.match(
     dockerfile,
-    /scripts\/preflight-control-plane\.mjs/,
+    /scripts\/preflight-review-application\.mjs/,
   );
   assert.match(dockerfile, /scripts\/migrate-container\.mjs/);
   assert.match(dockerfile, /scripts\/migrate-sqlite\.mjs/);
@@ -139,19 +139,8 @@ test("local Mac releases include every scheduled worker artifact", async () => {
     source("deploy/local-mac/stop.sh"),
   ]);
 
-  for (const moduleName of [
-    "crypto.ts",
-    "ethereum-rpc.ts",
-    "http.ts",
-    "rpc-node-preflight.ts",
-    "runtime-config.ts",
-  ]) {
-    assert.match(deployment, new RegExp(`\\b${moduleName.replace(".", "\\.")}\\b`));
-  }
-  assert.match(
-    deployment,
-    /scripts\/preflight-node-attachments\.mjs ethereum/,
-  );
+  assert.match(deployment, /preflight-review-application\.mjs/);
+  assert.doesNotMatch(deployment, /preflight-node-attachments|rpc-node-preflight|ethereum-rpc\.ts/);
   assert.match(deployment, /process-notification-outbox\.mjs/);
   assert.match(deployment, /process-stablecoin-payments\.mjs/);
   assert.match(deployment, /preflight-stablecoin-payments\.mjs/);
@@ -168,22 +157,6 @@ test("local Mac releases include every scheduled worker artifact", async () => {
   assert.match(start, /nodezuno_payment_worker_target/);
   assert.match(status, /Payment worker: scheduled/);
   assert.match(stop, /nodezuno_payment_worker_target/);
-});
-
-test("Ethereum attachment check remains read-only and configured-port aware", async () => {
-  const [attachment, common] = await Promise.all([
-    source("ops/ethereum-light/attach-nodezuno.sh"),
-    source("ops/ethereum-light/common.sh"),
-  ]);
-
-  assert.match(attachment, /load_config/);
-  assert.match(attachment, /UPSTREAM_LINE=.*\$RPC_PORT/);
-  assert.match(
-    attachment,
-    /if \[ "\$mode" = 'check' \]; then[\s\S]*?exit 0[\s\S]*?config_tmp=/,
-  );
-  assert.match(common, /config_file_mode=\$\(config_mode\)/);
-  assert.doesNotMatch(common, /^\s*mode=\$\(config_mode\)/m);
 });
 
 test("local container preview is bound to loopback only", async () => {
@@ -219,13 +192,8 @@ test("local Sites preview receives every runtime-sensitive feature toggle", asyn
     vite,
     /NODEZUNO_PUBLIC_INDEXING:\s*\n\s*process\.env\.NODEZUNO_PUBLIC_INDEXING \?\? "false"/,
   );
-  assert.match(vite, /NODEZUNO_GRPC_PUBLIC_ENDPOINT:/);
-  assert.match(vite, /NODEZUNO_GRPC_AUTH_SECRET:/);
   for (const environment of [sitesEnvironment, containerEnvironment]) {
-    assert.match(environment, /Ethereum, Base, and Solana RPC services/);
-    assert.match(environment, /"ethereum":\[/);
-    assert.match(environment, /"base":\[/);
-    assert.match(environment, /"solana":\[/);
+    assert.doesNotMatch(environment, /NODEZUNO_RPC_UPSTREAMS_JSON|NODEZUNO_GRPC_/);
   }
 });
 
@@ -252,7 +220,7 @@ test("managed deployment fails closed and checks full readiness", async () => {
   assert.doesNotMatch(render, /key:\s*NODEZUNO_ORIGIN_SECRET/);
   assert.match(
     render,
-    /dockerCommand:\s*sh -c 'node scripts\/preflight-control-plane\.mjs && node scripts\/preflight-stablecoin-payments\.mjs && node scripts\/migrate-container\.mjs && exec node scripts\/start-single-container\.mjs'/,
+    /dockerCommand:\s*sh -c 'node scripts\/preflight-review-application\.mjs && node scripts\/preflight-stablecoin-payments\.mjs && node scripts\/migrate-container\.mjs && exec node scripts\/start-single-container\.mjs'/,
   );
   assert.doesNotMatch(render, /preDeployCommand:/);
   assert.match(
@@ -300,14 +268,13 @@ test("managed deployment fails closed and checks full readiness", async () => {
   for (const smoke of [
     "smoke:links",
     "smoke:auth",
-    "smoke:self-service",
     "smoke:local",
   ]) {
     assert.match(continuousIntegration, new RegExp(`pnpm run ${smoke}`));
   }
   assert.equal(
-    packageJson.scripts["preflight:control-plane"],
-    "node scripts/preflight-control-plane.mjs",
+    packageJson.scripts["preflight:application"],
+    "node scripts/preflight-review-application.mjs",
   );
   assert.equal(
     packageJson.scripts["db:migrate:container"],
@@ -558,7 +525,7 @@ test("AWS production deployment is immutable, secret-isolated, and recoverable",
   assert.doesNotMatch(edge, /health_uri \/api\/v1\/live/);
   assert.doesNotMatch(
     compose.slice(compose.indexOf("  caddy:")),
-    /env_file|\.env\.production|BETTER_AUTH_SECRET|API_KEY_PEPPER/,
+    /env_file|\.env\.production|BETTER_AUTH_SECRET/,
   );
   assert.match(deployment, /docker pull "\$image"/);
   assert.match(deployment, /--force-recreate/);
@@ -713,7 +680,7 @@ test("Kubernetes web baseline keeps SQLite single-writer and runtime isolation e
   assert.match(deployment, /node scripts\/migrate-container\.mjs/);
   assert.match(
     deployment,
-    /node scripts\/preflight-control-plane\.mjs/,
+    /node scripts\/preflight-review-application\.mjs/,
   );
   assert.match(deployment, /path:\s*\/api\/v1\/live/);
   assert.match(deployment, /path:\s*\/api\/v1\/ready/);
@@ -752,7 +719,6 @@ test("Kubernetes web baseline keeps SQLite single-writer and runtime isolation e
 
   for (const secretName of [
     "RATE_LIMIT_SECRET",
-    "API_KEY_PEPPER",
     "BETTER_AUTH_SECRET",
   ]) {
     assert.match(secrets, new RegExp(`^\\s*${secretName}:`, "m"));
@@ -769,172 +735,6 @@ test("Kubernetes web baseline keeps SQLite single-writer and runtime isolation e
     `${deployment}\n${configuration}\n${secrets}\n${guide}`,
     /\u2014/,
   );
-});
-
-test("native gRPC deployment uses the shared customer key lifecycle", async () => {
-  const gatewayEnvironment = await source(
-    "services/grpc-gateway/config.example.env",
-  );
-  const cloudRun = await source(
-    "services/grpc-gateway/cloudrun.service.example.yaml",
-  );
-  const render = await source("render.yaml");
-  const compose = await source("compose.yaml");
-
-  assert.match(
-    gatewayEnvironment,
-    /^NODEZUNO_GRPC_AUTH_MODE=control-plane$/m,
-  );
-  assert.match(
-    gatewayEnvironment,
-    /^NODEZUNO_GRPC_AUTH_URL=https:\/\/nodezuno\.com\/api\/v1\/internal\/grpc\/authorize$/m,
-  );
-  assert.match(
-    gatewayEnvironment,
-    /^NODEZUNO_GRPC_AUTH_SECRET=$/m,
-  );
-  assert.match(
-    gatewayEnvironment,
-    /^GRPC_API_KEY_SHA256=$/m,
-  );
-  assert.match(
-    gatewayEnvironment,
-    /^ETHEREUM_UPSTREAMS_JSON=$/m,
-  );
-  assert.match(cloudRun, /name:\s*h2c\s*\n\s*containerPort:\s*8080/);
-  assert.match(
-    cloudRun,
-    /name:\s*NODEZUNO_GRPC_AUTH_MODE\s*\n\s*value:\s*control-plane/,
-  );
-  assert.match(
-    cloudRun,
-    /name:\s*NODEZUNO_GRPC_AUTH_SECRET[\s\S]*secretKeyRef:[\s\S]*name:\s*nodezuno-grpc-auth-secret/,
-  );
-  assert.match(
-    cloudRun,
-    /name:\s*ETHEREUM_UPSTREAMS_JSON[\s\S]*secretKeyRef:[\s\S]*name:\s*nodezuno-ethereum-upstreams/,
-  );
-  assert.doesNotMatch(cloudRun, /name:\s*ETHEREUM_RPC_URL/);
-  assert.doesNotMatch(cloudRun, /name:\s*ETHEREUM_RPC_HEADERS_JSON/);
-  assert.match(render, /key:\s*NODEZUNO_GRPC_PUBLIC_ENDPOINT/);
-  assert.match(render, /key:\s*NODEZUNO_GRPC_AUTH_SECRET/);
-  assert.match(compose, /profiles:\s*\n\s*-\s*native-grpc/);
-  assert.match(compose, /127\.0\.0\.1:50051:50051/);
-});
-
-test("native gRPC manifests keep probes, secrets, and runtime isolation explicit", async () => {
-  const cloudRun = await source(
-    "services/grpc-gateway/cloudrun.service.example.yaml",
-  );
-  const kubernetes = await source(
-    "services/grpc-gateway/kubernetes.deployment.example.yaml",
-  );
-  const gatewayMain = await source(
-    "services/grpc-gateway/cmd/server/main.go",
-  );
-  const gatewayReadme = await source(
-    "services/grpc-gateway/README.md",
-  );
-  const gatewayDockerfile = await source(
-    "services/grpc-gateway/Dockerfile",
-  );
-  const gatewayModule = await source(
-    "services/grpc-gateway/go.mod",
-  );
-
-  for (const manifest of [cloudRun, kubernetes]) {
-    assert.match(
-      manifest,
-      /service:\s*nodezuno-native-grpc-liveness/,
-    );
-    assert.match(
-      manifest,
-      /service:\s*nodezuno\.ethereum\.v1\.EthereumProxy/,
-    );
-    assert.match(manifest, /name:\s*ETHEREUM_UPSTREAMS_JSON/);
-    assert.match(manifest, /secretKeyRef:/);
-    assert.doesNotMatch(manifest, /name:\s*ETHEREUM_RPC_URL/);
-    assert.doesNotMatch(manifest, /name:\s*ETHEREUM_RPC_HEADERS_JSON/);
-    assert.doesNotMatch(manifest, /\u2014/);
-  }
-
-  assert.match(
-    cloudRun,
-    /serviceAccountName:\s*nodezuno-native-grpc@PROJECT\.iam\.gserviceaccount\.com/,
-  );
-  assert.match(cloudRun, /resources:\s*\n\s*limits:/);
-  assert.match(cloudRun, /cpu:\s*["']1["']/);
-  assert.match(cloudRun, /memory:\s*512Mi/);
-
-  for (const kind of ["Deployment", "Service", "PodDisruptionBudget"]) {
-    assert.match(kubernetes, new RegExp(`kind:\\s*${kind}`));
-  }
-  assert.match(kubernetes, /replicas:\s*2/);
-  assert.match(kubernetes, /type:\s*RollingUpdate/);
-  assert.match(kubernetes, /maxUnavailable:\s*0/);
-  assert.match(kubernetes, /maxSurge:\s*1/);
-  assert.match(kubernetes, /automountServiceAccountToken:\s*false/);
-  assert.match(kubernetes, /enableServiceLinks:\s*false/);
-  assert.match(kubernetes, /runAsNonRoot:\s*true/);
-  assert.match(kubernetes, /runAsUser:\s*65532/);
-  assert.match(kubernetes, /runAsGroup:\s*65532/);
-  assert.match(kubernetes, /type:\s*RuntimeDefault/);
-  assert.match(kubernetes, /allowPrivilegeEscalation:\s*false/);
-  assert.match(kubernetes, /privileged:\s*false/);
-  assert.match(kubernetes, /readOnlyRootFilesystem:\s*true/);
-  assert.match(kubernetes, /drop:\s*\n\s*-\s*ALL/);
-  assert.match(
-    kubernetes,
-    /resources:\s*\n\s*requests:[\s\S]*limits:/,
-  );
-  assert.match(
-    kubernetes,
-    /name:\s*nodezuno-native-grpc-secrets/,
-  );
-  assert.match(kubernetes, /key:\s*ethereum-upstreams\.json/);
-  assert.match(kubernetes, /key:\s*control-plane-auth-secret/);
-  assert.match(kubernetes, /type:\s*ClusterIP/);
-  assert.doesNotMatch(kubernetes, /type:\s*(?:LoadBalancer|NodePort)/);
-  assert.doesNotMatch(kubernetes, /kind:\s*Ingress/);
-  assert.doesNotMatch(kubernetes, /kind:\s*Secret/);
-  assert.match(kubernetes, /minAvailable:\s*1/);
-  assert.match(
-    kubernetes,
-    /@sha256:REPLACE_WITH_IMAGE_DIGEST/,
-  );
-
-  assert.match(
-    gatewayMain,
-    /const livenessServiceName = "nodezuno-native-grpc-liveness"/,
-  );
-  assert.match(
-    gatewayMain,
-    /SetServingStatus\(\s*livenessServiceName,\s*healthv1\.HealthCheckResponse_SERVING,/,
-  );
-  assert.match(gatewayReadme, /one to four ordered objects/);
-  assert.match(gatewayReadme, /no more than two provider attempts/);
-  assert.match(gatewayReadme, /cool(?:s|ing) down for 30 seconds/);
-  assert.match(gatewayReadme, /Single-upstream compatibility path/);
-  assert.match(
-    gatewayReadme,
-    /not evidence that a Cloud Run service exists/,
-  );
-  assert.doesNotMatch(gatewayReadme, /\u2014/);
-
-  assert.match(
-    gatewayDockerfile,
-    /^FROM golang:1\.26\.5-alpine@sha256:[0-9a-f]{64} AS build$/m,
-  );
-  assert.match(gatewayDockerfile, /^ENV GOTOOLCHAIN=local$/m);
-  assert.match(gatewayDockerfile, /go mod download && go mod verify/);
-  assert.match(gatewayDockerfile, /-mod=readonly/);
-  assert.match(gatewayDockerfile, /^FROM scratch$/m);
-  assert.match(gatewayDockerfile, /^USER 65532:65532$/m);
-  assert.doesNotMatch(
-    gatewayDockerfile,
-    /COPY\s+(?:config\.env|\.env)/,
-  );
-  assert.match(gatewayModule, /^go 1\.25\.0$/m);
 });
 
 test("container build context excludes local and production secrets", async () => {
@@ -959,49 +759,13 @@ test("container build context excludes local and production secrets", async () =
   assert.match(gitignore, /^\*\.sqlite-\*$/m);
 });
 
-test("customer-journey smoke is local-only and covers teardown", async () => {
-  const smoke = await source("scripts/self-service-smoke.mjs");
-  const packageJson = JSON.parse(await source("package.json"));
-
-  assert.equal(
-    packageJson.scripts["smoke:self-service"],
-    "node scripts/self-service-smoke.mjs",
-  );
-  assert.match(smoke, /refuses every non-loopback or non-HTTP target/);
-  assert.match(smoke, /\/api\/auth\/sign-up\/email/);
-  assert.match(smoke, /\/api\/auth\/sign-out/);
-  assert.match(smoke, /\/api\/auth\/sign-in\/email/);
-  assert.match(smoke, /\/api\/v1\/developer\/workspace/);
-  assert.match(smoke, /\/api\/v1\/developer\/services/);
-  assert.match(smoke, /\/api\/v1\/developer\/api-keys/);
-  assert.match(smoke, /\/api\/v1\/platform\/whoami/);
-  assert.match(smoke, /\/api\/v1\/control-plane\/services/);
-  assert.match(smoke, /services:manage/);
-  assert.match(smoke, /Idempotency-Key/);
-  assert.match(smoke, /browser service read/);
-  assert.match(smoke, /browser service rename/);
-  assert.match(smoke, /programmatic service read/);
-  assert.match(smoke, /programmatic service rename/);
-  assert.match(smoke, /service_update_conflict/);
-  assert.match(smoke, /programmatic policy update/);
-  assert.match(smoke, /bestEffortCleanup/);
-  assert.doesNotMatch(smoke, /console\.log\([^)]*apiKeySecret/);
-});
-
-test("backend smoke follows the current least-privilege key contract", async () => {
+test("backend smoke is local-only and covers current public services", async () => {
   const smoke = await source("scripts/backend-smoke.mjs");
 
-  assert.match(smoke, /\/api\/v1\/developer\/api-keys/);
-  assert.match(
-    smoke,
-    /"Idempotency-Key": `backend-smoke-key-\$\{crypto\.randomUUID\(\)\}`/,
-  );
-  assert.match(smoke, /scopes: \["platform:identity"\]/);
-  assert.match(smoke, /\/api\/v1\/platform\/whoami/);
-  assert.doesNotMatch(
-    smoke.match(
-      /assert\.deepEqual\(keyIdentity\.body\.data\.apiKey\.scopes,[\s\S]{0,160}/,
-    )?.[0] ?? "",
-    /rpc:invoke|grpc:invoke/,
-  );
+  assert.match(smoke, /refuses non-loopback targets/);
+  assert.match(smoke, /\/api\/v1\/status/);
+  assert.match(smoke, /\/api\/v1\/chains/);
+  assert.match(smoke, /\/api\/v1\/auth\/providers/);
+  assert.match(smoke, /\/api\/v1\/rpc\/legacy-service/);
+  assert.match(smoke, /Nodezuno website backend smoke check passed/);
 });

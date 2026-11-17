@@ -25,7 +25,7 @@ The following are local or generated state, not release source:
 - `.dev.vars` and populated `.env*` files
 - `.wrangler/` state, local D1 databases, and Wrangler credentials
 - `node_modules/`, build output, logs, and temporary files
-- `ops/**/.runtime/`, including node binaries, databases, logs, and PID files
+- `**/.runtime/`, including local downloaded runtimes, databases, logs, and PID files
 - Terraform state, plans, credentials, and populated variable files
 
 Check that sensitive local paths are ignored and not tracked:

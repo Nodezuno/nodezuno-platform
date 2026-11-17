@@ -176,14 +176,6 @@ function PrivacyDocument() {
               cross-site tracking cookies.
             </p>
             <p>
-              Developer records store workspace membership, API-key name,
-              prefix, final four characters, scopes, expiry, revocation and
-              last-use metadata, plus a keyed verifier instead of the raw API
-              key. Service records store the chosen product, environment,
-              network, region, status, endpoint when one exists, configuration,
-              and audit events.
-            </p>
-            <p>
               Form-abuse controls store daily HMAC fingerprints derived from IP
               and user agent instead of storing a second raw copy. Account
               sessions separately retain the IP address and user-agent metadata
@@ -198,14 +190,12 @@ function PrivacyDocument() {
             <h3>Purpose and basis</h3>
             <p>
               Data is used to respond to a requested conversation, review
-              design-partner and program fit, provide support, handle a
-              responsible-disclosure contact, administer request history,
-              authenticate accounts, provision developer workspaces, issue and
-              verify API credentials, save service configurations, preserve
-              consent, verify Ethereum payment evidence, contact a buyer about
-              a submitted transaction, suppress newsletter delivery, prevent
-              abuse, maintain security, and demonstrate administrative
-              accountability.
+              respond to a requested conversation or release-review order,
+              handle a responsible-disclosure contact, administer account and
+              order history, authenticate accounts, preserve consent, process
+              payment claims, contact a buyer about a submitted transaction,
+              suppress newsletter delivery, prevent abuse, maintain security,
+              and demonstrate administrative accountability.
             </p>
           </div>
         </section>
@@ -239,14 +229,15 @@ function PrivacyDocument() {
               to an external provider.
             </p>
             <p>
-              Direct payment uses no payment processor or hosted checkout. The
+              Direct payment uses no payment processor or hosted checkout. If
+              the owner approves launch and enables payment instructions, the
               private portal displays a server-issued instruction for official
-              USDC or USDT on Ethereum Mainnet. Nodezuno reads public Ethereum
-              receipt, block, finality, and ERC-20 Transfer evidence through
-              configured RPC infrastructure. Etherscan is linked only as an
-              optional public viewer and is not the payment authority. RPC and
-              hosting operators may process ordinary network metadata under
-              their own terms.
+              USDC or USDT on Ethereum Mainnet. In the Cloudflare profile,
+              Nodezuno manually checks the submitted transaction using public
+              blockchain information and records an operator decision.
+              Etherscan is an optional public viewer, not Nodezuno's payment
+              authority. Optional payment-verification providers may process
+              ordinary network metadata under their own terms.
             </p>
           </div>
         </section>
@@ -259,9 +250,9 @@ function PrivacyDocument() {
               from request and admin views after expiry, and are removed during
               backend maintenance. Expired rate-limit windows are removed.
               Customer sessions expire logically after seven days. Account,
-              provider, wallet, workspace, API-key, service, newsletter, and
-              audit records do not yet have a repository-owned self-service
-              erasure workflow or complete formal retention schedule. Public
+              provider, wallet, newsletter, and audit records do not yet have a
+              repository-owned self-service erasure workflow or complete
+              formal retention schedule. Public
               blockchain records cannot be deleted by Nodezuno. Those controls
               and distinctions must be documented before public commercial
               launch.

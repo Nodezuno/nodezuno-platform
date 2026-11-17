@@ -26,9 +26,6 @@ export default defineConfig(async ({ command, mode }) => {
             RATE_LIMIT_SECRET:
               process.env.RATE_LIMIT_SECRET ??
               "local-development-only-nodezuno-rate-limit-secret",
-            API_KEY_PEPPER:
-              process.env.API_KEY_PEPPER ??
-              "local-development-only-nodezuno-api-key-pepper",
             BETTER_AUTH_SECRET:
               process.env.BETTER_AUTH_SECRET ??
               "local-development-only-nodezuno-auth-secret-change-me",
@@ -47,17 +44,6 @@ export default defineConfig(async ({ command, mode }) => {
               process.env.NODEZUNO_LEGAL_LAUNCH_APPROVED ?? "false",
             NODEZUNO_PUBLIC_INDEXING:
               process.env.NODEZUNO_PUBLIC_INDEXING ?? "false",
-            NODEZUNO_RPC_UPSTREAMS_JSON:
-              process.env.NODEZUNO_RPC_UPSTREAMS_JSON ?? "",
-            NODEZUNO_RPC_HOURLY_CALL_QUOTA:
-              process.env.NODEZUNO_RPC_HOURLY_CALL_QUOTA ?? "1000",
-            NODEZUNO_RPC_WORKSPACE_HOURLY_CALL_QUOTA:
-              process.env.NODEZUNO_RPC_WORKSPACE_HOURLY_CALL_QUOTA ??
-              "10000",
-            NODEZUNO_GRPC_PUBLIC_ENDPOINT:
-              process.env.NODEZUNO_GRPC_PUBLIC_ENDPOINT ?? "",
-            NODEZUNO_GRPC_AUTH_SECRET:
-              process.env.NODEZUNO_GRPC_AUTH_SECRET ?? "",
           },
         }
       : {}),
