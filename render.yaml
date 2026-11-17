@@ -4,7 +4,7 @@ services:
     runtime: docker
     plan: starter
     dockerfilePath: ./Dockerfile
-    dockerCommand: sh -c 'node scripts/preflight-control-plane.mjs && node scripts/preflight-stablecoin-payments.mjs && node scripts/migrate-container.mjs && exec node scripts/start-single-container.mjs'
+    dockerCommand: sh -c 'node scripts/preflight-review-application.mjs && node scripts/preflight-stablecoin-payments.mjs && node scripts/migrate-container.mjs && exec node scripts/start-single-container.mjs'
     healthCheckPath: /api/v1/ready
     maxShutdownDelaySeconds: 30
     numInstances: 1
@@ -39,8 +39,6 @@ services:
         sync: false
       - key: RATE_LIMIT_SECRET
         sync: false
-      - key: API_KEY_PEPPER
-        sync: false
       - key: BETTER_AUTH_SECRET
         sync: false
       - key: REVIEW_CAPABILITY_SECRET
@@ -54,16 +52,6 @@ services:
       - key: ZOHO_SMTP_HOST
         value: smtp.zoho.in
       - key: ZOHO_SMTP_PASSWORD
-        sync: false
-      - key: NODEZUNO_RPC_UPSTREAMS_JSON
-        sync: false
-      - key: NODEZUNO_RPC_HOURLY_CALL_QUOTA
-        value: "1000"
-      - key: NODEZUNO_RPC_WORKSPACE_HOURLY_CALL_QUOTA
-        value: "10000"
-      - key: NODEZUNO_GRPC_PUBLIC_ENDPOINT
-        sync: false
-      - key: NODEZUNO_GRPC_AUTH_SECRET
         sync: false
       - key: NODEZUNO_ADMIN_EMAILS
         sync: false

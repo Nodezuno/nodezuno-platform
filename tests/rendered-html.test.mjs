@@ -162,7 +162,6 @@ test("documentation, whitepaper, press kit, and legal policies publish real arti
     privacy,
     disclosure,
     status,
-    openApi,
     sitemap,
     securityText,
     terms,
@@ -174,7 +173,6 @@ test("documentation, whitepaper, press kit, and legal policies publish real arti
       render("/legal/privacy").then((response) => response.text()),
       render("/security/responsible-disclosure").then((response) => response.text()),
       render("/status").then((response) => response.text()),
-      render("/api/v1/openapi"),
       render("/sitemap.xml"),
       readFile(new URL("../public/.well-known/security.txt", import.meta.url), "utf8"),
       render("/legal/terms").then((response) => response.text()),
@@ -215,11 +213,6 @@ test("documentation, whitepaper, press kit, and legal policies publish real arti
   assert.match(terms, /Sanjay manually checks and records the scheduling payment/);
   assert.match(terms, /Automatic payment verification is off/);
   assert.doesNotMatch(terms, /verifies the scheduling deposit from finalized Ethereum evidence/);
-
-  assert.equal(openApi.status, 200);
-  const specification = await openApi.json();
-  assert.equal(specification.openapi, "3.1.0");
-  assert.ok(specification.paths["/api/v1/submissions"]);
 
   assert.match(securityText, /Canonical: https:\/\/nodezuno\.com\/\.well-known\/security\.txt/);
 
@@ -427,7 +420,6 @@ function escapeRegularExpression(value) {
 
 test("API guards and image optimizer fail safely", async () => {
   const [
-    gas,
     invalidSubmission,
     crossOrigin,
     invalidChallenge,
@@ -435,19 +427,6 @@ test("API guards and image optimizer fail safely", async () => {
     missingDb,
   ] =
     await Promise.all([
-      render("/api/v1/gas-estimate", {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          "content-type": "application/json",
-          origin: "http://localhost",
-        },
-        body: JSON.stringify({
-          gasUnits: "21000",
-          gwei: "2.5",
-          assetPrice: "3500",
-        }),
-      }),
       render("/api/v1/submissions", {
         method: "POST",
         headers: {
@@ -477,8 +456,6 @@ test("API guards and image optimizer fail safely", async () => {
       }),
     ]);
 
-  assert.equal(gas.status, 200);
-  assert.equal((await gas.json()).data.fiatUsd, "0.18375");
   assert.equal(invalidSubmission.status, 403);
   assert.equal((await invalidSubmission.clone().json()).code, "challenge_required");
   assert.equal(crossOrigin.status, 403);

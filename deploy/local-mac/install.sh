@@ -110,13 +110,11 @@ create_environment() {
   local pnpm_binary="$3"
   local temporary_file
   local rate_limit_secret
-  local api_key_pepper
   local better_auth_secret
   local review_capability_secret
   temporary_file="$(mktemp "$NODEZUNO_LOCAL_ROOT/config/.nodezuno.env.XXXXXX")"
   chmod 600 "$temporary_file"
   rate_limit_secret="$(openssl rand -hex 32)"
-  api_key_pepper="$(openssl rand -hex 32)"
   better_auth_secret="$(openssl rand -hex 32)"
   review_capability_secret="$(openssl rand -hex 32)"
   {
@@ -137,7 +135,6 @@ create_environment() {
     write_environment_line NODEZUNO_SQLITE_PATH \
       "$NODEZUNO_LOCAL_ROOT/data/nodezuno.sqlite"
     write_environment_line RATE_LIMIT_SECRET "$rate_limit_secret"
-    write_environment_line API_KEY_PEPPER "$api_key_pepper"
     write_environment_line BETTER_AUTH_SECRET "$better_auth_secret"
     write_environment_line REVIEW_CAPABILITY_SECRET "$review_capability_secret"
     write_environment_line NODEZUNO_ORIGIN_SECRET ""
@@ -149,12 +146,7 @@ create_environment() {
     write_environment_line NODEZUNO_STABLECOIN_PAYMENT_MODE disabled
     write_environment_line NODEZUNO_ETHEREUM_RPC_ENDPOINTS_JSON ""
     write_environment_line NODEZUNO_PAYMENT_CONFIRMATIONS 12
-    write_environment_line NODEZUNO_RPC_UPSTREAMS_JSON ""
     write_environment_line NODEZUNO_ALLOW_ETHEREUM_HTTP_LOOPBACK false
-    write_environment_line NODEZUNO_RPC_HOURLY_CALL_QUOTA 1000
-    write_environment_line NODEZUNO_RPC_WORKSPACE_HOURLY_CALL_QUOTA 10000
-    write_environment_line NODEZUNO_GRPC_PUBLIC_ENDPOINT ""
-    write_environment_line NODEZUNO_GRPC_AUTH_SECRET ""
     write_environment_line CLOUDFLARE_ACCOUNT_ID ""
     write_environment_line CLOUDFLARE_D1_DATABASE_ID ""
     write_environment_line CLOUDFLARE_D1_API_TOKEN ""

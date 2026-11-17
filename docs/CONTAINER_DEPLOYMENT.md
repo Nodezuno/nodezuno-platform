@@ -45,9 +45,8 @@ NODEZUNO_LOCAL_PREVIEW=false
 PUBLIC_ORIGIN=https://nodezuno.com
 BETTER_AUTH_URL=https://nodezuno.com
 RATE_LIMIT_SECRET=<unique-random-secret>
-API_KEY_PEPPER=<different-random-secret>
-BETTER_AUTH_SECRET=<third-random-secret>
-REVIEW_CAPABILITY_SECRET=<fourth-random-secret>
+BETTER_AUTH_SECRET=<different-random-secret>
+REVIEW_CAPABILITY_SECRET=<third-random-secret>
 NODEZUNO_ADMIN_EMAILS=info@nodezuno.com
 NODEZUNO_LEGAL_LAUNCH_APPROVED=false
 NODEZUNO_PUBLIC_INDEXING=false
@@ -66,8 +65,9 @@ be reused. Production stablecoin settlement requires an approved legal launch
 gate, exact HTTPS origins, `ethereum_mainnet` mode, and two or three valid
 dedicated Ethereum endpoints. Keep `NODEZUNO_LEGAL_LAUNCH_APPROVED=false` and
 `NODEZUNO_STABLECOIN_PAYMENT_MODE=disabled` until the gate is documented.
-Configure Google only with both OAuth values. Keep unrelated blockchain
-upstream variables empty for the Upgrade Assurance website.
+Configure Google only with both OAuth values. The website does not expose a
+customer RPC, node, or explorer service. Ethereum endpoints in this container
+profile are reserved for optional payment verification only.
 
 Payment RPC URLs and headers are secrets even though they query public-chain
 data. Public URLs must use HTTPS and may not contain credentials, queries, or
@@ -93,14 +93,14 @@ SecureString.
 Run migrations and operational preflights as bounded one-shot deployment jobs.
 Do not run a live RPC preflight during every web-process restart. After the
 one-shot payment worker has written a healthy verifier heartbeat, start the web
-process with the control-plane configuration gate:
+process with the application configuration gate:
 
 ```bash
 node scripts/migrate-container.mjs
-node scripts/preflight-control-plane.mjs
+node scripts/preflight-review-application.mjs
 node scripts/preflight-stablecoin-payments.mjs
 node scripts/process-stablecoin-payments.mjs --once
-node scripts/preflight-control-plane.mjs && exec node server.js
+node scripts/preflight-review-application.mjs && exec node server.js
 ```
 
 The AWS deployment performs these steps as separate one-shot Compose tasks

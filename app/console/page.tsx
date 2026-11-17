@@ -6,7 +6,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default async function ConsolePage({
+export default async function LegacyConsolePage({
   searchParams,
 }: {
   searchParams: Promise<PublicSearchParams>;

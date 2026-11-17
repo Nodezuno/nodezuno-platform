@@ -219,7 +219,7 @@ openssl rand -hex 32
 ```
 
 Use four different generated values for `RATE_LIMIT_SECRET`,
-`API_KEY_PEPPER`, `BETTER_AUTH_SECRET`, and `REVIEW_CAPABILITY_SECRET`. Back up
+`BETTER_AUTH_SECRET`, and `REVIEW_CAPABILITY_SECRET`. Back up
 the review capability secret and do not rotate it casually because outstanding
 private review links depend on it. Configure the Zoho SMTP app password and
 the exact SMTP host shown in Zoho Mail settings. Nodezuno sends from and routes
@@ -291,7 +291,8 @@ NODEZUNO_ETHEREUM_RPC_ENDPOINTS_JSON=[{"name":"payment-mainnet-primary","provide
 NODEZUNO_PAYMENT_CONFIRMATIONS=12
 ```
 
-Keep payment endpoints separate from customer RPC endpoints. Public URLs must
+Payment-verification endpoints are internal to the payment worker, not a
+customer RPC service. Public URLs must
 use HTTPS. URL credentials, query strings, fragments, redirects, cookie and
 hop-by-hop headers are rejected. A private HTTP endpoint is accepted only on
 loopback, RFC 1918, or `.internal` addressing. Store credential headers only in

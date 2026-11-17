@@ -12,13 +12,6 @@ export const accountDataExportLimits = {
   evmWallets: 50,
   solanaWallets: 50,
   sessions: 50,
-  workspaces: 20,
-  memberships: 20,
-  services: 200,
-  apiKeys: 200,
-  accessPolicies: 200,
-  auditEvents: 500,
-  usage: 500,
   submissions: 50,
   reviewOrders: 50,
   stablecoinPaymentIntents: 100,
@@ -68,88 +61,6 @@ type SessionRow = {
   updatedAt: number;
   networkAddressRecorded: number | boolean;
   userAgentRecorded: number | boolean;
-};
-
-type MembershipRow = {
-  id: string;
-  workspaceId: string;
-  workspaceSlug: string;
-  workspaceName: string;
-  workspaceStatus: string;
-  role: string;
-  memberCreatedAt: number;
-  memberUpdatedAt: number;
-  workspaceCreatedAt: number;
-  workspaceUpdatedAt: number;
-};
-
-type ServiceRow = {
-  id: string;
-  workspaceId: string;
-  product: string;
-  name: string;
-  environment: string;
-  network: string;
-  region: string;
-  status: string;
-  endpointPath: string | null;
-  createdAt: number;
-  updatedAt: number;
-  archivedAt: number | null;
-};
-
-type ApiKeyRow = {
-  id: string;
-  workspaceId: string;
-  serviceId: string | null;
-  name: string;
-  prefix: string;
-  lastFour: string;
-  scopesJson: string;
-  createdAt: number;
-  lastUsedAt: number | null;
-  expiresAt: number;
-  revokedAt: number | null;
-};
-
-type AccessPolicyRow = {
-  serviceId: string;
-  workspaceId: string;
-  revision: number;
-  allowedOriginCount: number;
-  allowedIpRangeCount: number;
-  allowedMethodCount: number;
-  createdAt: number;
-  updatedAt: number;
-};
-
-type AuditEventRow = {
-  id: string;
-  workspaceId: string;
-  actorKind: string;
-  action: string;
-  entityType: string;
-  entityId: string;
-  createdAt: number;
-};
-
-type UsageRow = {
-  workspaceId: string;
-  serviceId: string;
-  apiKeyId: string;
-  firstBucketStartedAt: number;
-  lastBucketStartedAt: number;
-  quotaUnits: number;
-  quotaLimit: number;
-  requests: number;
-  calls: number;
-  errors: number;
-  upstreamFailures: number;
-  latencyMsTotal: number;
-  bytesIn: number;
-  bytesOut: number;
-  lastRequestAt: number | null;
-  updatedAt: number;
 };
 
 type SubmissionRow = {
@@ -444,161 +355,6 @@ export async function buildAccountDataExport(options: {
       .bind(accountId, accountDataExportLimits.sessions + 1),
     database
       .prepare(
-        `SELECT m.id, m.workspace_id AS workspaceId,
-                w.slug AS workspaceSlug, w.name AS workspaceName,
-                w.status AS workspaceStatus, m.role,
-                m.created_at AS memberCreatedAt,
-                m.updated_at AS memberUpdatedAt,
-                w.created_at AS workspaceCreatedAt,
-                w.updated_at AS workspaceUpdatedAt
-         FROM developer_workspace_members m
-         JOIN developer_workspaces w ON w.id = m.workspace_id
-         WHERE m.account_id = ?
-            OR (m.account_id IS NULL AND m.email = ?)
-         ORDER BY CASE m.role
-           WHEN 'owner' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END,
-           w.created_at ASC, m.id ASC
-         LIMIT ?`,
-      )
-      .bind(accountId, email, accountDataExportLimits.memberships + 1),
-    database
-      .prepare(
-        `SELECT s.id, s.workspace_id AS workspaceId, s.product, s.name,
-                s.environment, s.network, s.region, s.status,
-                s.endpoint_path AS endpointPath,
-                s.created_at AS createdAt, s.updated_at AS updatedAt,
-                s.archived_at AS archivedAt
-         FROM developer_services s
-         WHERE EXISTS (
-           SELECT 1
-           FROM developer_workspace_members scope
-           WHERE scope.workspace_id = s.workspace_id
-             AND (
-               scope.account_id = ?
-               OR (scope.account_id IS NULL AND scope.email = ?)
-             )
-         )
-         ORDER BY s.created_at DESC, s.id DESC
-         LIMIT ?`,
-      )
-      .bind(accountId, email, accountDataExportLimits.services + 1),
-    database
-      .prepare(
-        `SELECT k.id, k.workspace_id AS workspaceId,
-                k.service_id AS serviceId, k.name, k.prefix,
-                k.last_four AS lastFour, k.scopes_json AS scopesJson,
-                k.created_at AS createdAt, k.last_used_at AS lastUsedAt,
-                k.expires_at AS expiresAt, k.revoked_at AS revokedAt
-         FROM developer_api_keys k
-         WHERE EXISTS (
-           SELECT 1
-           FROM developer_workspace_members scope
-           WHERE scope.workspace_id = k.workspace_id
-             AND scope.role IN ('owner', 'admin')
-             AND (
-               scope.account_id = ?
-               OR (scope.account_id IS NULL AND scope.email = ?)
-             )
-         )
-         ORDER BY k.created_at DESC, k.id DESC
-         LIMIT ?`,
-      )
-      .bind(accountId, email, accountDataExportLimits.apiKeys + 1),
-    database
-      .prepare(
-        `SELECT p.service_id AS serviceId,
-                p.workspace_id AS workspaceId, p.revision,
-                json_array_length(p.allowed_origins_json)
-                  AS allowedOriginCount,
-                json_array_length(p.allowed_ip_cidrs_json)
-                  AS allowedIpRangeCount,
-                json_array_length(p.allowed_methods_json)
-                  AS allowedMethodCount,
-                p.created_at AS createdAt, p.updated_at AS updatedAt
-         FROM developer_rpc_access_policies p
-         WHERE EXISTS (
-           SELECT 1
-           FROM developer_workspace_members scope
-           WHERE scope.workspace_id = p.workspace_id
-             AND (
-               scope.account_id = ?
-               OR (scope.account_id IS NULL AND scope.email = ?)
-             )
-         )
-         ORDER BY p.updated_at DESC, p.service_id DESC
-         LIMIT ?`,
-      )
-      .bind(
-        accountId,
-        email,
-        accountDataExportLimits.accessPolicies + 1,
-      ),
-    database
-      .prepare(
-        `SELECT e.id, e.workspace_id AS workspaceId,
-                CASE
-                  WHEN e.actor_account_id = ? THEN 'caller'
-                  WHEN e.api_key_id IS NOT NULL THEN 'api_key'
-                  WHEN e.actor_account_id IS NOT NULL
-                    OR e.actor_email IS NOT NULL THEN 'workspace_member'
-                  ELSE 'system'
-                END AS actorKind,
-                e.action, e.entity_type AS entityType,
-                e.entity_id AS entityId, e.created_at AS createdAt
-         FROM developer_audit_events e
-         WHERE EXISTS (
-           SELECT 1
-           FROM developer_workspace_members scope
-           WHERE scope.workspace_id = e.workspace_id
-             AND scope.role IN ('owner', 'admin')
-             AND (
-               scope.account_id = ?
-               OR (scope.account_id IS NULL AND scope.email = ?)
-             )
-         )
-         ORDER BY e.created_at DESC, e.id DESC
-         LIMIT ?`,
-      )
-      .bind(
-        accountId,
-        accountId,
-        email,
-        accountDataExportLimits.auditEvents + 1,
-      ),
-    database
-      .prepare(
-        `SELECT u.workspace_id AS workspaceId,
-                u.service_id AS serviceId, u.api_key_id AS apiKeyId,
-                MIN(u.bucket_start) AS firstBucketStartedAt,
-                MAX(u.bucket_start) AS lastBucketStartedAt,
-                SUM(u.quota_units) AS quotaUnits,
-                MAX(u.quota_limit) AS quotaLimit,
-                SUM(u.request_count) AS requests,
-                SUM(u.rpc_call_count) AS calls,
-                SUM(u.error_count) AS errors,
-                SUM(u.upstream_failure_count) AS upstreamFailures,
-                SUM(u.latency_ms_total) AS latencyMsTotal,
-                SUM(u.bytes_in) AS bytesIn,
-                SUM(u.bytes_out) AS bytesOut,
-                MAX(u.last_request_at) AS lastRequestAt,
-                MAX(u.updated_at) AS updatedAt
-         FROM ethereum_rpc_usage_buckets u
-         WHERE EXISTS (
-           SELECT 1
-           FROM developer_workspace_members scope
-           WHERE scope.workspace_id = u.workspace_id
-             AND (
-               scope.account_id = ?
-               OR (scope.account_id IS NULL AND scope.email = ?)
-             )
-         )
-         GROUP BY u.workspace_id, u.service_id, u.api_key_id
-         ORDER BY MAX(u.updated_at) DESC, u.service_id DESC, u.api_key_id DESC
-         LIMIT ?`,
-      )
-      .bind(accountId, email, accountDataExportLimits.usage + 1),
-    database
-      .prepare(
         `SELECT id, kind, status, name, email, company,
                 team_type AS teamType, message,
                 source_path AS sourcePath, created_at AS createdAt,
@@ -790,58 +546,34 @@ export async function buildAccountDataExport(options: {
     results[3]?.results,
     accountDataExportLimits.sessions,
   );
-  const memberships = boundedRows<MembershipRow>(
-    results[4]?.results,
-    accountDataExportLimits.memberships,
-  );
-  const services = boundedRows<ServiceRow>(
-    results[5]?.results,
-    accountDataExportLimits.services,
-  );
-  const apiKeys = boundedRows<ApiKeyRow>(
-    results[6]?.results,
-    accountDataExportLimits.apiKeys,
-  );
-  const accessPolicies = boundedRows<AccessPolicyRow>(
-    results[7]?.results,
-    accountDataExportLimits.accessPolicies,
-  );
-  const auditEvents = boundedRows<AuditEventRow>(
-    results[8]?.results,
-    accountDataExportLimits.auditEvents,
-  );
-  const usage = boundedRows<UsageRow>(
-    results[9]?.results,
-    accountDataExportLimits.usage,
-  );
   const submissions = boundedRows<SubmissionRow>(
-    results[10]?.results,
+    results[4]?.results,
     accountDataExportLimits.submissions,
   );
   const reviewOrders = boundedRows<ReviewOrderExportRow>(
-    results[11]?.results,
+    results[5]?.results,
     accountDataExportLimits.reviewOrders,
   );
   const stablecoinPaymentIntents = boundedRows<StablecoinPaymentIntentExportRow>(
-    results[12]?.results,
+    results[6]?.results,
     accountDataExportLimits.stablecoinPaymentIntents,
   );
   const stablecoinPaymentClaims = boundedRows<StablecoinPaymentClaimExportRow>(
-    results[13]?.results,
+    results[7]?.results,
     accountDataExportLimits.stablecoinPaymentClaims,
   );
   const stablecoinPaymentReconciliations = boundedRows<StablecoinPaymentReconciliationExportRow>(
-    results[14]?.results,
+    results[8]?.results,
     accountDataExportLimits.stablecoinPaymentReconciliations,
   );
   const stablecoinPaymentConfirmations = boundedRows<StablecoinPaymentConfirmationExportRow>(
-    results[15]?.results,
+    results[9]?.results,
     accountDataExportLimits.stablecoinPaymentConfirmations,
   );
   const syntheticEmail = isSyntheticWalletEmail(email);
 
   return {
-    schemaVersion: "5",
+    schemaVersion: "6",
     exportedAt: isoTimestamp(exportedAt),
     account: {
       id: account.id,
@@ -878,88 +610,6 @@ export async function buildAccountDataExport(options: {
       expiresAt: isoTimestamp(row.expiresAt),
       networkAddressRecorded: Boolean(row.networkAddressRecorded),
       userAgentRecorded: Boolean(row.userAgentRecorded),
-    })),
-    workspaces: memberships.rows.map((row) => ({
-      id: row.workspaceId,
-      slug: row.workspaceSlug,
-      name: row.workspaceName,
-      status: row.workspaceStatus,
-      createdAt: isoTimestamp(row.workspaceCreatedAt),
-      updatedAt: isoTimestamp(row.workspaceUpdatedAt),
-    })),
-    memberships: memberships.rows.map((row) => ({
-      id: row.id,
-      workspaceId: row.workspaceId,
-      role: row.role,
-      state: "active",
-      createdAt: isoTimestamp(row.memberCreatedAt),
-      updatedAt: isoTimestamp(row.memberUpdatedAt),
-    })),
-    services: services.rows.map((row) => ({
-      id: row.id,
-      workspaceId: row.workspaceId,
-      product: row.product,
-      name: row.name,
-      environment: row.environment,
-      network: row.network,
-      region: row.region,
-      status: row.status,
-      endpointPath: row.endpointPath,
-      createdAt: isoTimestamp(row.createdAt),
-      updatedAt: isoTimestamp(row.updatedAt),
-      archivedAt: optionalIsoTimestamp(row.archivedAt),
-    })),
-    apiKeys: apiKeys.rows.map((row) => ({
-      id: row.id,
-      workspaceId: row.workspaceId,
-      serviceId: row.serviceId,
-      name: row.name,
-      prefix: row.prefix,
-      lastFour: row.lastFour,
-      scopes: parseStringArray(row.scopesJson),
-      createdAt: isoTimestamp(row.createdAt),
-      lastUsedAt: optionalIsoTimestamp(row.lastUsedAt),
-      expiresAt: isoTimestamp(row.expiresAt),
-      revokedAt: optionalIsoTimestamp(row.revokedAt),
-    })),
-    accessPolicies: accessPolicies.rows.map((row) => ({
-      serviceId: row.serviceId,
-      workspaceId: row.workspaceId,
-      revision: safeInteger(row.revision),
-      allowedOriginCount: safeInteger(row.allowedOriginCount),
-      allowedIpRangeCount: safeInteger(row.allowedIpRangeCount),
-      allowedMethodCount: safeInteger(row.allowedMethodCount),
-      createdAt: isoTimestamp(row.createdAt),
-      updatedAt: isoTimestamp(row.updatedAt),
-    })),
-    auditEvents: auditEvents.rows.map((row) => ({
-      id: row.id,
-      workspaceId: row.workspaceId,
-      actor: row.actorKind,
-      action: row.action,
-      entity: {
-        type: row.entityType,
-        id: row.entityId,
-      },
-      createdAt: isoTimestamp(row.createdAt),
-    })),
-    usage: usage.rows.map((row) => ({
-      workspaceId: row.workspaceId,
-      serviceId: row.serviceId,
-      apiKeyId: row.apiKeyId,
-      firstBucketStartedAt: isoTimestamp(row.firstBucketStartedAt),
-      lastBucketStartedAt: isoTimestamp(row.lastBucketStartedAt),
-      quotaUnits: safeInteger(row.quotaUnits),
-      quotaLimit: safeInteger(row.quotaLimit),
-      requests: safeInteger(row.requests),
-      calls: safeInteger(row.calls),
-      errors: safeInteger(row.errors),
-      upstreamFailures: safeInteger(row.upstreamFailures),
-      latencyMsTotal: safeInteger(row.latencyMsTotal),
-      bytesIn: safeInteger(row.bytesIn),
-      bytesOut: safeInteger(row.bytesOut),
-      lastRequestAt: optionalIsoTimestamp(row.lastRequestAt),
-      updatedAt: isoTimestamp(row.updatedAt),
     })),
     submissions: submissions.rows.map((row) => ({
       id: row.id,
@@ -1140,13 +790,6 @@ export async function buildAccountDataExport(options: {
         evmWallets: evmWallets.truncated,
         solanaWallets: solanaWallets.truncated,
         sessions: sessions.truncated,
-        workspaces: memberships.truncated,
-        memberships: memberships.truncated,
-        services: services.truncated,
-        apiKeys: apiKeys.truncated,
-        accessPolicies: accessPolicies.truncated,
-        auditEvents: auditEvents.truncated,
-        usage: usage.truncated,
         submissions: submissions.truncated,
         reviewOrders: reviewOrders.truncated,
         stablecoinPaymentIntents: stablecoinPaymentIntents.truncated,
@@ -1157,15 +800,12 @@ export async function buildAccountDataExport(options: {
     },
     redactions: {
       authenticationCredentials: true,
-      apiKeyMaterial: true,
       networkAddresses: true,
       userAgents: true,
-      auditDetails: true,
-      serviceConfiguration: true,
       submissionSecurityMetadata: true,
       paymentVerificationWorkerLeases: true,
       paymentReconciliationOperatorIdentity: true,
-      rpcEndpointConfiguration: true,
+      paymentVerifierCredentials: true,
     },
   };
 }
@@ -1253,28 +893,6 @@ function isoTimestamp(value: number): string {
 
 function optionalIsoTimestamp(value: number | null): string | null {
   return value === null ? null : isoTimestamp(value);
-}
-
-function parseStringArray(value: string): string[] {
-  try {
-    const parsed = JSON.parse(value) as unknown;
-    if (
-      Array.isArray(parsed) &&
-      parsed.length <= 20 &&
-      parsed.every(
-        (item) => typeof item === "string" && item.length <= 128,
-      )
-    ) {
-      return parsed;
-    }
-  } catch {
-    // Invalid stored metadata fails closed below.
-  }
-  throw new HttpProblem(
-    503,
-    "account_export_unavailable",
-    "Stored account metadata could not be exported safely.",
-  );
 }
 
 function isSyntheticWalletEmail(email: string): boolean {

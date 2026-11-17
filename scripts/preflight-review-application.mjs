@@ -4,15 +4,12 @@ import { stablecoinPaymentConfiguration } from "../lib/server/stablecoin-payment
 const snapshot = runtimeConfigurationSnapshot();
 const stablecoinPayments = await stablecoinPaymentConfiguration();
 const publicIndexingFlag = process.env.NODEZUNO_PUBLIC_INDEXING;
-const legalLaunchApprovalFlag =
-  process.env.NODEZUNO_LEGAL_LAUNCH_APPROVED;
+const legalLaunchApprovalFlag = process.env.NODEZUNO_LEGAL_LAUNCH_APPROVED;
 const indexingFlagsValid =
   isBooleanFlag(publicIndexingFlag) &&
   isBooleanFlag(legalLaunchApprovalFlag);
-const publicIndexingRequested =
-  publicIndexingFlag === "true";
-const legalLaunchApproved =
-  legalLaunchApprovalFlag === "true";
+const publicIndexingRequested = publicIndexingFlag === "true";
+const legalLaunchApproved = legalLaunchApprovalFlag === "true";
 const publicIndexing = {
   requested: publicIndexingRequested,
   legalLaunchApproved,
@@ -36,11 +33,9 @@ const checks = {
   ingressBoundary: snapshot.ingressBoundary,
   accessIdentity: snapshot.accessIdentity,
   rateLimitSecret: snapshot.rateLimitSecret,
-  apiKeyPepper: snapshot.apiKeyPepper,
   reviewCapabilitySecret: snapshot.reviewCapabilitySecret,
   indexingFlagsValid,
-  legalLaunchBoundary:
-    !publicIndexingRequested || legalLaunchApproved,
+  legalLaunchBoundary: !publicIndexingRequested || legalLaunchApproved,
   stablecoinPayments: stablecoinPayments.ready,
   notificationDelivery: snapshot.notificationDelivery,
   deliverableStorage:
@@ -52,7 +47,7 @@ const ready = Object.values(checks).every(Boolean);
 
 process.stdout.write(
   `${JSON.stringify({
-    service: "nodezuno-web-control-plane",
+    service: "nodezuno-release-review",
     runtime: snapshot.runtime,
     ready,
     publicIndexing,

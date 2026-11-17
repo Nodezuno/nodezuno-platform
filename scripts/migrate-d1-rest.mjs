@@ -510,26 +510,6 @@ async function verifySchema(query) {
         FROM submissions LIMIT 1
       ) AS submissionAccountAccessible,
       EXISTS(
-        SELECT id, slug, name, status, created_at, updated_at
-        FROM developer_workspaces LIMIT 1
-      ) AS developerWorkspacesAccessible,
-      EXISTS(
-        SELECT id, workspace_id, account_id, email, role, created_at,
-               updated_at
-        FROM developer_workspace_members LIMIT 1
-      ) AS developerMembersAccessible,
-      EXISTS(
-        SELECT id, workspace_id, name, prefix, last_four, scopes_json,
-               secret_hash, service_id, created_by_account_id, created_by_email,
-               created_at, last_used_at, expires_at, revoked_at
-        FROM developer_api_keys LIMIT 1
-      ) AS developerApiKeysAccessible,
-      EXISTS(
-        SELECT id, workspace_id, actor_account_id, actor_email, api_key_id,
-               action, entity_type, entity_id, detail_json, created_at
-        FROM developer_audit_events LIMIT 1
-      ) AS developerAuditAccessible,
-      EXISTS(
         SELECT id, name, email, email_verified, image, created_at, updated_at
         FROM auth_users LIMIT 1
       ) AS authUsersAccessible,
@@ -561,37 +541,6 @@ async function verifySchema(query) {
         SELECT id, user_id, address, is_primary, created_at
         FROM auth_solana_wallets LIMIT 1
       ) AS authSolanaWalletsAccessible,
-      EXISTS(
-        SELECT id, workspace_id, product, name, environment, network,
-               region, status, endpoint_path, configuration_json,
-               created_by_account_id, created_at, updated_at,
-               last_mutation_id, archived_at
-        FROM developer_services LIMIT 1
-      ) AS developerServicesAccessible,
-      EXISTS(
-        SELECT service_id, workspace_id, allowed_origins_json,
-               allowed_ip_cidrs_json, allowed_methods_json, revision,
-               update_id, updated_by_account_id, updated_by_email,
-               created_at, updated_at
-        FROM developer_rpc_access_policies LIMIT 1
-      ) AS developerRpcAccessPoliciesAccessible,
-      EXISTS(
-        SELECT id, workspace_id, operation, idempotency_hash,
-               request_hash, resource_id, created_at, expires_at
-        FROM developer_mutation_idempotency LIMIT 1
-      ) AS developerMutationIdempotencyAccessible,
-      EXISTS(
-        SELECT id, workspace_id, service_id, api_key_id, bucket_start,
-               quota_units, quota_limit, request_count, rpc_call_count,
-               error_count, upstream_failure_count, latency_ms_total,
-               bytes_in, bytes_out, last_request_at, updated_at, expires_at
-        FROM ethereum_rpc_usage_buckets LIMIT 1
-      ) AS ethereumRpcUsageAccessible,
-      EXISTS(
-        SELECT id, workspace_id, bucket_start, quota_units, quota_limit,
-               updated_at, expires_at
-        FROM ethereum_rpc_workspace_quota_buckets LIMIT 1
-      ) AS ethereumRpcWorkspaceQuotaAccessible,
       EXISTS(
         SELECT id, reference, status, contact_name, work_email, company,
                target_chain, total_amount, deposit_amount, balance_amount,
@@ -659,11 +608,7 @@ async function verifySchema(query) {
     Number(row?.reconciliationCriticalIndexCount) !== 15 ||
     Number(row?.reconciliationCriticalTriggerCount) !== 12 ||
     ![
-      row?.developerWorkspacesAccessible,
       row?.submissionAccountAccessible,
-      row?.developerMembersAccessible,
-      row?.developerApiKeysAccessible,
-      row?.developerAuditAccessible,
       row?.authUsersAccessible,
       row?.authSessionsAccessible,
       row?.authAccountsAccessible,
@@ -671,11 +616,6 @@ async function verifySchema(query) {
       row?.authRateLimitsAccessible,
       row?.authWalletAddressesAccessible,
       row?.authSolanaWalletsAccessible,
-      row?.developerServicesAccessible,
-      row?.developerRpcAccessPoliciesAccessible,
-      row?.developerMutationIdempotencyAccessible,
-      row?.ethereumRpcUsageAccessible,
-      row?.ethereumRpcWorkspaceQuotaAccessible,
       row?.reviewOrdersAccessible,
       row?.stablecoinPaymentIntentsAccessible,
       row?.stablecoinPaymentClaimsAccessible,
