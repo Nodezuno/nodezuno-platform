@@ -17,13 +17,9 @@ export const dynamic = "force-dynamic";
 
 const kindLabels: Record<string, string> = {
   sales: "Company enquiry",
-  workspace_access: "Access request",
-  support: "Support request",
-  startup_program: "Program enquiry",
   press: "Press enquiry",
   career_interest: "Career interest",
   security_contact: "Security contact",
-  event_interest: "Event interest",
 };
 
 const submissionStatusLabels: Record<string, string> = {

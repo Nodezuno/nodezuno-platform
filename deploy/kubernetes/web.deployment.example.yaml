@@ -65,7 +65,7 @@ spec:
             - -c
             - >-
               node scripts/migrate-container.mjs &&
-              node scripts/preflight-control-plane.mjs &&
+              node scripts/preflight-review-application.mjs &&
               node scripts/preflight-stablecoin-payments.mjs &&
               node scripts/process-stablecoin-payments.mjs --once
           envFrom:
@@ -101,7 +101,7 @@ spec:
             - /bin/sh
             - -c
             - >-
-              node scripts/preflight-control-plane.mjs && exec node server.js
+              node scripts/preflight-review-application.mjs && exec node server.js
           ports:
             - name: http
               containerPort: 3000

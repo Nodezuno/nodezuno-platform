@@ -14,6 +14,13 @@ const containerWebpack: NonNullable<NextConfig["webpack"]> = (
         "lib/server/cloudflare-workers-node.ts",
       ),
     ),
+    new webpack.NormalModuleReplacementPlugin(
+      /^cloudflare:sockets$/,
+      path.resolve(
+        process.cwd(),
+        "lib/server/cloudflare-sockets-node.ts",
+      ),
+    ),
   );
   return config;
 };

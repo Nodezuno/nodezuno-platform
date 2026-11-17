@@ -19,7 +19,7 @@ const emailSignup = await postAuth("/sign-up/email", {
   name: "Nodezuno auth smoke",
   password: "correct horse battery staple",
 });
-assert.equal(emailSignup.response.status, 200);
+assert.equal(emailSignup.response.status, 200, JSON.stringify(emailSignup.payload));
 const emailCookie = sessionCookie(emailSignup.response);
 const emailSession = await applicationSession(emailCookie);
 assert.equal(emailSession.authMethod, "email");
@@ -28,11 +28,9 @@ assert.equal(emailSession.contactEmail, emailAddress);
 const evm = privateKeyToAccount(
   "0x59c6995e998f97a5a0044976f7ad3f3b66c4c35f06bd5f61e92dca5dcf9e85c5",
 );
-const evmNonce = await postAuth("/siwe/nonce", {
-  walletAddress: evm.address,
-  chainId: 1,
-});
-assert.equal(evmNonce.response.status, 200);
+// Better Auth's SIWE nonce endpoint accepts an empty strict body.
+const evmNonce = await postAuth("/siwe/nonce", {});
+assert.equal(evmNonce.response.status, 200, JSON.stringify(evmNonce.payload));
 assert.match(evmNonce.payload.nonce, /^[0-9a-f]{32}$/);
 const issuedAt = new Date();
 const evmMessage = createSiweMessage({
@@ -51,10 +49,8 @@ const evmSignature = await evm.signMessage({ message: evmMessage });
 const evmLogin = await postAuth("/siwe/verify", {
   message: evmMessage,
   signature: evmSignature,
-  walletAddress: evm.address,
-  chainId: 1,
 });
-assert.equal(evmLogin.response.status, 200);
+assert.equal(evmLogin.response.status, 200, JSON.stringify(evmLogin.payload));
 const evmCookie = sessionCookie(evmLogin.response);
 const evmSession = await applicationSession(evmCookie);
 assert.equal(evmSession.authMethod, "evm");
@@ -62,8 +58,6 @@ assert.equal(evmSession.walletAddress?.toLowerCase(), evm.address.toLowerCase())
 const evmReplay = await postAuth("/siwe/verify", {
   message: evmMessage,
   signature: evmSignature,
-  walletAddress: evm.address,
-  chainId: 1,
 });
 assert.equal(evmReplay.response.status, 401);
 
@@ -74,7 +68,7 @@ const solanaAddress = bs58.encode(
 const solanaNonce = await postAuth("/solana/nonce", {
   address: solanaAddress,
 });
-assert.equal(solanaNonce.response.status, 200);
+assert.equal(solanaNonce.response.status, 200, JSON.stringify(solanaNonce.payload));
 assert.equal(solanaNonce.payload.input.address, solanaAddress);
 const solanaMessage = createSignInMessage(solanaNonce.payload.input);
 const solanaSignature = ed25519.sign(
@@ -87,7 +81,7 @@ const solanaLogin = await postAuth("/solana/verify", {
   signature: encodeBase64Url(solanaSignature),
   signatureType: "ed25519",
 });
-assert.equal(solanaLogin.response.status, 200);
+assert.equal(solanaLogin.response.status, 200, JSON.stringify(solanaLogin.payload));
 const solanaCookie = sessionCookie(solanaLogin.response);
 const solanaSession = await applicationSession(solanaCookie);
 assert.equal(solanaSession.authMethod, "solana");

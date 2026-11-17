@@ -1,28 +1,19 @@
 # Nodezuno account authentication
 
-Nodezuno uses Better Auth 1.6.23 with the configured application database as
+Nodezuno uses Better Auth with the configured application database as
 the durable account and session store. Sites uses a direct Cloudflare D1
 binding. A container can use D1 REST or SQLite on one persistent-volume
-instance. A stable `auth_users.id` owns workspace memberships and service
-resources. Email is profile and recovery data, not the authorization key.
+instance. A stable `auth_users.id` owns the account, linked identities, and
+first-party order history. Email is profile and recovery data, not the
+authorization key.
 
 ## Product access boundary
 
-Account creation provides website identity, request history, and the retained
-account console. It does not accept an Upgrade Assurance engagement, create a
-paid entitlement, authorize a contract deployment, or activate any retained
-RPC or gRPC capability. Review acceptance remains a written commercial and
-technical decision after intake.
-
-Application sessions authenticate people to the console. Developer API keys
-authenticate workloads and carry exactly one least-privilege scope. An
-unbound key uses `platform:identity` or `services:manage`; a callable
-service-bound key uses only `rpc:invoke` or `grpc:invoke` according to the
-service product. The target service must be active in the same workspace and
-the immutable binding must match it. A `services:manage` key must remain
-unbound and cannot invoke customer traffic. Native gRPC additionally requires
-a separately deployed ready gateway; no current public deployment evidence
-exists.
+Account creation provides first-party website identity, session management,
+and access to the user's own review-order history. It does not approve a
+commercial engagement, authorize a contract deployment, or provide access to
+an infrastructure API. The public service-order terms and payment state remain
+separate from account authentication.
 
 ## Supported account methods
 

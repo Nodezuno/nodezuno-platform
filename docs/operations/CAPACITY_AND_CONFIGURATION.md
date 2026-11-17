@@ -7,7 +7,7 @@ Status: current low-traffic AWS operating profile. One host and one web process 
 | Group | Operator responsibility | Scope |
 | --- | --- | --- |
 | Deployment identity | Exact `PUBLIC_ORIGIN`, `BETTER_AUTH_URL`, `NODEZUNO_DOMAIN`; direct versus trusted ingress | Web; origin supplied separately to the email worker |
-| Core secrets | Independent `RATE_LIMIT_SECRET`, `API_KEY_PEPPER`, `BETTER_AUTH_SECRET`, `REVIEW_CAPABILITY_SECRET` | Web, with only the required subset sent to each worker |
+| Core secrets | Independent `RATE_LIMIT_SECRET`, `BETTER_AUTH_SECRET`, `REVIEW_CAPABILITY_SECRET` | Web, with only the required subset sent to each worker |
 | Payment evidence | Approved Mainnet mode, independent RPC configuration, confirmation threshold | Web and payment worker only; no wallet private key |
 | Email delivery | `ZOHO_SMTP_HOST` and protected `ZOHO_SMTP_PASSWORD`; fixed `info@nodezuno.com` sender and operations inbox | Email worker and relevant web paths; not the payment worker |
 | Topology | `single-host-sqlite`, one web replica, `systemd-single-host` worker owner, exact process role | Host-injected values in Compose; never user-selected form fields |
@@ -21,7 +21,7 @@ Run the existing redacted preflights in the correct configured process environme
 
 ```sh
 node scripts/preflight-deployment-topology.mjs web
-node scripts/preflight-control-plane.mjs
+node scripts/preflight-review-application.mjs
 node scripts/preflight-stablecoin-payments.mjs
 ```
 

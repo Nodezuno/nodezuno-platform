@@ -32,26 +32,26 @@ resource "aws_instance" "web" {
   }
 
   user_data_base64 = base64gzip(templatefile("${path.module}/templates/user-data.sh.tftpl", {
-    app_log_group        = aws_cloudwatch_log_group.application.name
-    aws_region           = var.aws_region
-    backup_bucket        = aws_s3_bucket.backups.id
-    backup_script_base64 = base64encode(file("${path.module}/../../scripts/nodezuno-backup.sh"))
-    caddy_config_base64  = base64encode(file("${path.module}/../../Caddy.ec2.conf"))
-    caddy_log_group      = aws_cloudwatch_log_group.caddy.name
-    common_script_base64 = base64encode(file("${path.module}/../../scripts/nodezuno-aws-common.sh"))
-    compose_base64       = base64encode(file("${path.module}/../../compose.ec2.yaml"))
-    compose_sha256_arm64 = "54488fffb60782f3c8787a48b95ed15f49f5a3a85f4105304bd46db5edd9db61"
-    data_volume_id       = aws_ebs_volume.data.id
-    deliverable_bucket   = aws_s3_bucket.deliverables.id
-    deliverable_kms_arn  = aws_kms_key.deliverables.arn
-    deploy_script_base64 = base64encode(file("${path.module}/../../scripts/nodezuno-deploy.sh"))
+    app_log_group          = aws_cloudwatch_log_group.application.name
+    aws_region             = var.aws_region
+    backup_bucket          = aws_s3_bucket.backups.id
+    backup_script_base64   = base64encode(file("${path.module}/../../scripts/nodezuno-backup.sh"))
+    caddy_config_base64    = base64encode(file("${path.module}/../../Caddy.ec2.conf"))
+    caddy_log_group        = aws_cloudwatch_log_group.caddy.name
+    common_script_base64   = base64encode(file("${path.module}/../../scripts/nodezuno-aws-common.sh"))
+    compose_base64         = base64encode(file("${path.module}/../../compose.ec2.yaml"))
+    compose_sha256_arm64   = "54488fffb60782f3c8787a48b95ed15f49f5a3a85f4105304bd46db5edd9db61"
+    data_volume_id         = aws_ebs_volume.data.id
+    deliverable_bucket     = aws_s3_bucket.deliverables.id
+    deliverable_kms_arn    = aws_kms_key.deliverables.arn
+    deploy_script_base64   = base64encode(file("${path.module}/../../scripts/nodezuno-deploy.sh"))
     firewall_script_base64 = base64encode(file("${path.module}/../../scripts/nodezuno-container-firewall.sh"))
-    domain_name          = var.domain_name
-    ecr_repository_uri   = aws_ecr_repository.web.repository_url
-    host_bundle_id       = local.host_bundle_id
-    host_metrics_base64  = base64encode(file("${path.module}/../../scripts/nodezuno-host-metrics.sh"))
-    operator_email       = var.operator_email
-    parameter_name       = local.parameter_name
+    domain_name            = var.domain_name
+    ecr_repository_uri     = aws_ecr_repository.web.repository_url
+    host_bundle_id         = local.host_bundle_id
+    host_metrics_base64    = base64encode(file("${path.module}/../../scripts/nodezuno-host-metrics.sh"))
+    operator_email         = var.operator_email
+    parameter_name         = local.parameter_name
   }))
 
   user_data_replace_on_change = false

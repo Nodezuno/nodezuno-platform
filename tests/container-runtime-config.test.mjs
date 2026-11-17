@@ -26,8 +26,6 @@ const productionEnvironment = {
   BETTER_AUTH_URL: "https://nodezuno.com",
   RATE_LIMIT_SECRET:
     "rate-limit-prod-3a91f7c20e5d84b619c2f7a05d1e",
-  API_KEY_PEPPER:
-    "api-key-pepper-prod-7c20e5d84b619a3f05d1e9c2f",
   BETTER_AUTH_SECRET:
     "better-auth-prod-5d84b619a3f07c20e1d9c2f75",
   REVIEW_CAPABILITY_SECRET:
@@ -61,7 +59,6 @@ test("container readiness accepts only a coherent production configuration", () 
       runtime: "container",
       publicOrigin: true,
       rateLimitSecret: true,
-      apiKeyPepper: true,
       reviewCapabilitySecret: true,
       secretIsolation: true,
       administratorAllowlist: true,
@@ -73,27 +70,19 @@ test("container readiness accepts only a coherent production configuration", () 
       deliverableStorage: true,
     });
 
-    process.env.API_KEY_PEPPER = process.env.RATE_LIMIT_SECRET;
+    process.env.NODEZUNO_ORIGIN_SECRET = process.env.RATE_LIMIT_SECRET;
     assert.equal(
       runtimeConfigurationSnapshot().secretIsolation,
       false,
     );
 
-    process.env.API_KEY_PEPPER = productionEnvironment.API_KEY_PEPPER;
-    process.env.NODEZUNO_GRPC_AUTH_SECRET =
-      process.env.RATE_LIMIT_SECRET;
-    assert.equal(
-      runtimeConfigurationSnapshot().secretIsolation,
-      false,
-    );
-
-    process.env.NODEZUNO_GRPC_AUTH_SECRET =
-      "grpc-control-prod-8e4b619a3f07c20d5e1c9f275";
+    process.env.NODEZUNO_ORIGIN_SECRET =
+      productionEnvironment.NODEZUNO_ORIGIN_SECRET;
     assert.equal(
       runtimeConfigurationSnapshot().secretIsolation,
       true,
     );
-    delete process.env.NODEZUNO_GRPC_AUTH_SECRET;
+    delete process.env.NODEZUNO_ORIGIN_SECRET;
     process.env.BETTER_AUTH_URL = "https://accounts.nodezuno.com";
     assert.equal(
       runtimeConfigurationSnapshot().accountAuthentication,
