@@ -235,7 +235,7 @@ function PrivacyDocument() {
               USDC or USDT on Ethereum Mainnet. In the Cloudflare profile,
               Nodezuno manually checks the submitted transaction using public
               blockchain information and records an operator decision.
-              Etherscan is an optional public viewer, not Nodezuno's payment
+              Etherscan is an optional public viewer, not Nodezuno&apos;s payment
               authority. Optional payment-verification providers may process
               ordinary network metadata under their own terms.
             </p>
