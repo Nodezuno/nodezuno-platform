@@ -115,7 +115,7 @@ jobs:
             sleep 1
           done
           pnpm run smoke:links -- http://127.0.0.1:3000
-          pnpm run smoke:auth -- http://127.0.0.1:3000
+          pnpm run smoke:auth -- http://localhost:3000
           pnpm run smoke:local
 
   image:

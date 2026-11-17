@@ -272,6 +272,10 @@ test("managed deployment fails closed and checks full readiness", async () => {
   ]) {
     assert.match(continuousIntegration, new RegExp(`pnpm run ${smoke}`));
   }
+  assert.match(
+    continuousIntegration,
+    /pnpm run smoke:auth -- http:\/\/localhost:3000/,
+  );
   assert.equal(
     packageJson.scripts["preflight:application"],
     "node scripts/preflight-review-application.mjs",
