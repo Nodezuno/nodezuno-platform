@@ -30,6 +30,7 @@ export const permanentPublicRedirects: Readonly<Record<string, string>> = {
   company: "/company/about",
   community: "/resources/research",
   "community/startup-program": "/review/start",
+  console: "/account",
   contact: "/company/contact",
   "contact/sales": "/review/start",
   "contact/chain-launch": "/review/start",

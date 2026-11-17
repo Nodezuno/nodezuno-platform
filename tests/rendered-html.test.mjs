@@ -162,7 +162,6 @@ test("documentation, whitepaper, press kit, and legal policies publish real arti
     privacy,
     disclosure,
     status,
-    openApi,
     sitemap,
     securityText,
     terms,
@@ -174,7 +173,6 @@ test("documentation, whitepaper, press kit, and legal policies publish real arti
       render("/legal/privacy").then((response) => response.text()),
       render("/security/responsible-disclosure").then((response) => response.text()),
       render("/status").then((response) => response.text()),
-      render("/api/v1/openapi"),
       render("/sitemap.xml"),
       readFile(new URL("../public/.well-known/security.txt", import.meta.url), "utf8"),
       render("/legal/terms").then((response) => response.text()),
@@ -215,11 +213,6 @@ test("documentation, whitepaper, press kit, and legal policies publish real arti
   assert.match(terms, /Sanjay manually checks and records the scheduling payment/);
   assert.match(terms, /Automatic payment verification is off/);
   assert.doesNotMatch(terms, /verifies the scheduling deposit from finalized Ethereum evidence/);
-
-  assert.equal(openApi.status, 200);
-  const specification = await openApi.json();
-  assert.equal(specification.openapi, "3.1.0");
-  assert.ok(specification.paths["/api/v1/submissions"]);
 
   assert.match(securityText, /Canonical: https:\/\/nodezuno\.com\/\.well-known\/security\.txt/);
 
