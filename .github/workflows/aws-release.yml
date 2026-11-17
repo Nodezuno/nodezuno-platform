@@ -67,7 +67,7 @@ jobs:
           persist-credentials: false
 
       - name: Assume the exact AWS build role
-        uses: aws-actions/configure-aws-credentials@451ce2a72e8d729a59ebeaacab82dbce58e7af4c
+        uses: aws-actions/configure-aws-credentials@416c15366b69fd69e1df1513e25ba57af8e11d5f
         with:
           aws-region: ${{ vars.AWS_REGION }}
           role-to-assume: ${{ vars.AWS_BUILD_ROLE_ARN }}
@@ -166,7 +166,7 @@ jobs:
           node-version: 24.14.0
 
       - name: Assume the approval-bound AWS deployment role
-        uses: aws-actions/configure-aws-credentials@451ce2a72e8d729a59ebeaacab82dbce58e7af4c
+        uses: aws-actions/configure-aws-credentials@416c15366b69fd69e1df1513e25ba57af8e11d5f
         with:
           aws-region: ${{ vars.AWS_REGION }}
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
