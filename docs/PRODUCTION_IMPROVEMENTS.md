@@ -1,5 +1,12 @@
 # Production improvement execution record
 
+**Status:** Historical implementation record. This document describes the
+source as it existed on 3 September 2026. Later cleanup removed the RPC, gRPC,
+node, explorer, and developer-workspace implementations referenced below.
+Those entries are retained as an audit trail, not as claims about the current
+application, deployed services, or product roadmap. See the
+[documentation map](README.md) for current scope.
+
 Date: 2026-09-03.
 Feedback source: `NODEZUNO_PRODUCTION_IMPROVEMENT_PLAN.md`, supplied by the owner.
 Scope: first implementation batch plus a verified inventory of existing controls.

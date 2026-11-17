@@ -56,9 +56,9 @@ compatibility changes, and retain a rollback deployment. [Cloudflare Next.js on 
 
 No KV, Durable Objects, Queues, Workers AI, or Workers Analytics Engine binding
 is added merely to consume free allocations. The current application has no
-correctness need for them. The retained RPC control plane requires configured
-external chain endpoints. The native gRPC gateway is a separate runtime and is
-not hosted by this Worker profile.
+correctness need for them. Historical RPC and gRPC schemas remain only in the
+immutable D1 migration history; they are not Worker services or customer
+features.
 
 ## Database and file storage behavior
 
@@ -121,13 +121,12 @@ values in `wrangler.jsonc`, source control, or a deploy command's arguments.
 
 ```sh
 pnpm exec wrangler secret put RATE_LIMIT_SECRET
-pnpm exec wrangler secret put API_KEY_PEPPER
 pnpm exec wrangler secret put BETTER_AUTH_SECRET
 pnpm exec wrangler secret put REVIEW_CAPABILITY_SECRET
 pnpm exec wrangler secret put ZOHO_SMTP_PASSWORD
 ```
 
-Generate the first four independently. Configure non-secret values in the
+Generate each secret independently. Configure non-secret values in the
 Worker's Variables settings or the `vars` section of `wrangler.jsonc`:
 
 - `NODEZUNO_ADMIN_EMAILS`: the real verified administrator email. For this

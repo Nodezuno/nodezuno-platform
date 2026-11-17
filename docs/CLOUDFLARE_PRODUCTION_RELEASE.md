@@ -95,11 +95,10 @@ authentication origin.
 Set values through the Cloudflare dashboard's protected secret interface or
 Wrangler's interactive `secret put` command. Never put secret values in
 `wrangler.jsonc`, command arguments, GitHub logs, screenshots, or this record.
-Generate these four independent values separately:
+Generate these three independent values separately:
 
 ```text
 RATE_LIMIT_SECRET
-API_KEY_PEPPER
 BETTER_AUTH_SECRET
 REVIEW_CAPABILITY_SECRET
 ```

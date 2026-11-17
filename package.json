@@ -23,13 +23,10 @@
     "test:container:integration": "NODEZUNO_D1_INTEGRATION=true node scripts/run-node-tests.mjs --exact=container-d1-integration.test.mjs --allow-partial",
     "smoke:local": "node scripts/backend-smoke.mjs http://localhost:3000",
     "smoke:auth": "node scripts/auth-provider-smoke.mjs",
-    "smoke:self-service": "node scripts/self-service-smoke.mjs",
     "verify:cloudflare-artifact": "node scripts/verify-cloudflare-artifact.mjs",
-    "nodezuno": "node scripts/nodezuno.mjs",
     "smoke:links": "node scripts/check-public-links.mjs",
     "smoke:external-links": "node scripts/check-external-links.mjs",
-    "preflight:control-plane": "node scripts/preflight-control-plane.mjs",
-    "preflight:nodes": "node scripts/preflight-node-attachments.mjs",
+    "preflight:application": "node scripts/preflight-review-application.mjs",
     "release:source:verify": "node scripts/verify-source-integrity.mjs",
     "release:source:export": "node scripts/export-source.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
@@ -69,7 +66,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.45.1",
+    "@cloudflare/vite-plugin": "1.70.0",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "22.19.19",
     "@types/react": "19.2.17",

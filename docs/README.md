@@ -31,7 +31,6 @@ the order immediately; there is no manual proposal approval before checkout.
 - [Cloudflare Free-Tier deployment profile](CLOUDFLARE_FREE_TIER.md)
 - [Cloudflare production release gates and evidence](CLOUDFLARE_PRODUCTION_RELEASE.md)
 - [Deep research remediation record](DEEP_RESEARCH_REMEDIATION.md)
-- [Production improvement plan progress](PRODUCTION_IMPROVEMENTS.md)
 - [October launch-hardening record](operations/LAUNCH_HARDENING_2026_10_06.md)
 - [Privacy-safe customer API diagnostics](API_OBSERVABILITY.md)
 - [Rendering and module boundaries](architecture/RENDERING_AND_BOUNDARIES.md)
@@ -50,23 +49,25 @@ the order immediately; there is no manual proposal approval before checkout.
 - [Data model](DATA_MODEL.md)
 - [Authentication](AUTHENTICATION.md)
 
-## Retained engineering foundations
+## Migration history
 
-The account, workspace, API-key, RPC, gRPC, node-attachment, and service-control
-code remains in the repository as internal foundation. It is not a current
-public Nodezuno product and must not be marketed as deployed infrastructure.
+The active application no longer contains the earlier RPC, gRPC,
+blockchain-node runner, explorer, or self-service developer-workspace product
+implementations. Existing ordered D1 migrations are retained so databases
+created by earlier releases keep their upgrade path. Migration files are
+historical records, not product documentation or evidence of deployed
+infrastructure. This source cleanup does not drop database tables or delete
+customer data.
 
-- [Self-service engineering reference](SELF_SERVICE.md)
-- [Node attachment reference](NODE_ATTACHMENT.md)
-- [Ethereum light-client runbook](ETHEREUM_LIGHT_NODE.md)
-- [AI Explorer architecture prototype](AI_EXPLORER.md)
-- [AI Operations Copilot prelaunch specification](AI_OPERATIONS_COPILOT.md)
-- [Backend implementation](BACKEND.md)
+- [Current backend architecture](BACKEND.md)
+- [Current application API](API.md)
+- [Database migration policy](MIGRATIONS.md)
 
-## Archived strategy research
+## Archived strategy and remediation records
 
-These files preserve earlier research and decisions for historical context.
-They are not the current company roadmap, product promise, or investor claim.
+These files preserve earlier research, decisions, or implementation snapshots
+for historical context. They are not the current company roadmap, product
+promise, implementation inventory, or investor claim.
 
 - [Chain Launch Cloud research](CHAIN_LAUNCH_CLOUD.md)
 - [Superseded pivot roadmap](PIVOT_ROADMAP.md)
@@ -74,6 +75,7 @@ They are not the current company roadmap, product promise, or investor claim.
 - [Superseded content policy](CONTENT_GOVERNANCE.md)
 - [Earlier partnerships and grants model](PARTNERSHIPS_AND_GRANTS.md)
 - [Earlier self-service RPC benchmark](PRODUCT_BENCHMARK.md)
+- [Earlier production improvement record](PRODUCTION_IMPROVEMENTS.md)
 
 ## Canonical customer terminology
 

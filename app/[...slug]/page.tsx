@@ -6,7 +6,7 @@ import {
   type PublicSearchParams,
   withSearchParams,
 } from "@/lib/public-navigation";
-import { chainDirectory, getPageData } from "@/lib/site-data";
+import { getPageData } from "@/lib/site-data";
 
 type RouteProps = {
   params: Promise<{ slug: string[] }>;
@@ -17,14 +17,8 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   const { slug } = await params;
   const page = getPageData(slug.join("/"));
   if (!page) return {};
-  const isProposedProductPlane =
-    page.path.startsWith("products/") || page.path.startsWith("solutions/");
-  const title = isProposedProductPlane
-    ? `${page.eyebrow} (Proposed)`
-    : page.eyebrow;
-  const description = isProposedProductPlane
-    ? `${page.intro} Prelaunch architecture; blockchain infrastructure is not generally available.`
-    : page.intro;
+  const title = page.eyebrow;
+  const description = page.intro;
 
   return {
     title,
@@ -58,5 +52,5 @@ export default async function CatchAllPage({ params, searchParams }: RouteProps)
     permanentRedirect(withSearchParams(`/${page.path}`, query));
   }
 
-  return <DetailPage initialChains={page.kind === "directory" ? chainDirectory : []} page={page} />;
+  return <DetailPage page={page} />;
 }

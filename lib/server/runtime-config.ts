@@ -141,7 +141,6 @@ export function runtimeConfigurationSnapshot(): {
   runtime: "sites" | "container";
   publicOrigin: boolean;
   rateLimitSecret: boolean;
-  apiKeyPepper: boolean;
   reviewCapabilitySecret: boolean;
   secretIsolation: boolean;
   administratorAllowlist: boolean;
@@ -154,9 +153,6 @@ export function runtimeConfigurationSnapshot(): {
 } {
   const rateLimitSecret = normalizedRuntimeSecret(
     process.env.RATE_LIMIT_SECRET,
-  );
-  const apiKeyPepper = normalizedRuntimeSecret(
-    process.env.API_KEY_PEPPER,
   );
   const betterAuthSecret = normalizedRuntimeSecret(
     process.env.BETTER_AUTH_SECRET,
@@ -178,12 +174,6 @@ export function runtimeConfigurationSnapshot(): {
         rawOriginGatewaySecret === ""
       : ingressMode === "trusted-gateway" &&
         originGatewaySecret !== null;
-  const grpcAuthSecret = normalizedRuntimeSecret(
-    process.env.NODEZUNO_GRPC_AUTH_SECRET,
-  );
-  const grpcAuthConfigured = Boolean(
-    process.env.NODEZUNO_GRPC_AUTH_SECRET?.trim(),
-  );
   const publicOrigin = configuredPublicOrigin();
   const deploymentDomain = normalizeApplicationDomain(
     process.env.NODEZUNO_DOMAIN,
@@ -265,31 +255,18 @@ export function runtimeConfigurationSnapshot(): {
     runtime: isContainerRuntime() ? "container" : "sites",
     publicOrigin: publicOriginMatchesDomain,
     rateLimitSecret: rateLimitSecret !== null,
-    apiKeyPepper: apiKeyPepper !== null,
     reviewCapabilitySecret: reviewCapabilitySecret !== null,
     secretIsolation:
       allValuesAreDistinct(
         ingressMode === "trusted-gateway"
           ? [
               rateLimitSecret,
-              apiKeyPepper,
               betterAuthSecret,
               reviewCapabilitySecret,
               originGatewaySecret,
             ]
-          : [rateLimitSecret, apiKeyPepper, betterAuthSecret, reviewCapabilitySecret],
-      ) &&
-      (!grpcAuthConfigured ||
-        (grpcAuthSecret !== null &&
-          ![
-            rateLimitSecret,
-            apiKeyPepper,
-            betterAuthSecret,
-            reviewCapabilitySecret,
-            ...(ingressMode === "trusted-gateway"
-              ? [originGatewaySecret]
-              : []),
-          ].includes(grpcAuthSecret))),
+          : [rateLimitSecret, betterAuthSecret, reviewCapabilitySecret],
+      ),
     administratorAllowlist: administratorEmails.length > 0,
     accountAuthentication:
       betterAuthSecret !== null &&
@@ -586,7 +563,10 @@ function normalizeClientAddress(value: string | null): string | null {
   }
 }
 
-function constantTimeStringEqual(left: string, right: string): boolean {
+export function constantTimeStringEqual(
+  left: string,
+  right: string,
+): boolean {
   const length = Math.max(left.length, right.length);
   let mismatch = left.length ^ right.length;
   for (let index = 0; index < length; index += 1) {

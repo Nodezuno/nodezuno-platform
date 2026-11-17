@@ -103,12 +103,11 @@ export default async function AdminPage() {
             <span className="section-kicker">Nodezuno operations</span>
             <h1>Platform operations center.</h1>
             <p>
-              Verify operator-attached infrastructure, review stored
-              requests, and control the public status and chain truth
-              surfaces. Signed in as <strong>{email}</strong>.
+              Manage release-review orders, customer deliverables, intake,
+              and published website status. Signed in as <strong>{email}</strong>.
             </p>
           </div>
-          <Link className="button button-outline" href="/developers/status">
+          <Link className="button button-outline" href="/status">
             View public status
           </Link>
         </div>

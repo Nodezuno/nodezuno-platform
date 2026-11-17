@@ -79,7 +79,6 @@ declare module "cloudflare:workers" {
     DELIVERABLES?: R2Bucket;
     ASSETS?: Fetcher;
     RATE_LIMIT_SECRET?: string;
-    API_KEY_PEPPER?: string;
     BETTER_AUTH_SECRET?: string;
     BETTER_AUTH_URL?: string;
     GOOGLE_CLIENT_ID?: string;
@@ -93,11 +92,6 @@ declare module "cloudflare:workers" {
     NODEZUNO_ENABLE_LEGACY_HOSTING_IDENTITY?: string;
     NODEZUNO_LEGAL_LAUNCH_APPROVED?: string;
     NODEZUNO_PUBLIC_INDEXING?: string;
-    NODEZUNO_RPC_UPSTREAMS_JSON?: string;
-    NODEZUNO_RPC_HOURLY_CALL_QUOTA?: string;
-    NODEZUNO_RPC_WORKSPACE_HOURLY_CALL_QUOTA?: string;
-    NODEZUNO_GRPC_AUTH_SECRET?: string;
-    NODEZUNO_GRPC_PUBLIC_ENDPOINT?: string;
   };
 }
 

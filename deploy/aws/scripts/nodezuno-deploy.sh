@@ -253,7 +253,7 @@ if nodezuno_compose run --rm --no-deps --entrypoint node nodezuno \
   nodezuno_compose run --rm --no-deps --entrypoint node nodezuno \
     scripts/migrate-container.mjs &&
   nodezuno_compose run --rm --no-deps --entrypoint node nodezuno \
-    scripts/preflight-control-plane.mjs &&
+    scripts/preflight-review-application.mjs &&
   nodezuno_compose run --rm --no-deps --entrypoint node nodezuno \
     scripts/preflight-stablecoin-payments.mjs &&
   nodezuno_compose --profile operations run --rm --no-deps payment-worker; then

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { NodeAttachmentOperations } from "@/components/node-attachment-operations";
 import type {
   PublicChain,
   PublicStatusService,
@@ -140,8 +139,6 @@ export function AdminDashboard({
           {notice}
         </div>
       ) : null}
-
-      <NodeAttachmentOperations />
 
       <section className="admin-section">
         <div className="admin-section-head">
