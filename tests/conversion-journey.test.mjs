@@ -27,7 +27,8 @@ test("public conversion explains the focused Upgrade Assurance offer honestly", 
     ]);
 
   assert.equal((home.match(/href="\/review\/start"/g) ?? []).length, 2);
-  assert.match(home, /Your next upgrade\./);
+  assert.match(home, /Cybersecurity for your next upgrade\./);
+  assert.match(home, /Know what changed before it ships\./);
   assert.match(home, /Every supported release review has the same/);
   assert.match(home, /USDC or USDT on Ethereum Mainnet/);
   assert.match(home, /Sanjay checks payment manually/);

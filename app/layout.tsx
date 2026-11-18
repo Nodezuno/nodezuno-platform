@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { AmbientPointer } from "@/components/client-effects";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { brandMessaging } from "@/lib/brand-messaging";
 import { navigation } from "@/lib/site-data";
 import "./globals.css";
 
@@ -18,15 +19,18 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL("https://nodezuno.com"),
     title: {
-      default: "Nodezuno | Smart Contract and Protocol Release Reviews",
+      default: "Nodezuno | Cybersecurity for Smart Contract and Protocol Upgrades",
       template: "%s | Nodezuno",
     },
-    description:
-      "Nodezuno compares a planned smart contract or protocol release with the version covered by a prior audit or professional security review, then delivers findings, reproducible evidence where feasible, and a reviewer-signed recommendation.",
+    description: brandMessaging.description,
     applicationName: "Nodezuno",
-    category: "smart contract security",
+    category: "cybersecurity",
     creator: "Nodezuno",
     keywords: [
+      "cybersecurity for smart contract upgrades",
+      "blockchain cybersecurity review",
+      "smart contract cybersecurity review",
+      "protocol upgrade cybersecurity",
       "smart contract release security review",
       "protocol release security review",
       "EVM release security review",
@@ -50,23 +54,21 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       url: "/",
       siteName: "Nodezuno",
-      title: "Review your next smart contract or protocol release before production.",
-      description:
-        "Fixed-scope release reviews across supported EVM and non-EVM ecosystems, with prioritized findings, reproducible evidence where feasible, and a reviewer-signed recommendation.",
+      title: brandMessaging.socialTitle,
+      description: brandMessaging.socialDescription,
       images: [
         {
           url: "/og.png",
           width: 1200,
           height: 630,
-          alt: "Nodezuno smart contract and protocol release security reviews.",
+          alt: "Nodezuno cybersecurity reviews for smart contract and protocol upgrades.",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Nodezuno Smart Contract and Protocol Release Reviews",
-      description:
-        "Compare one planned release with its previously audited or professionally reviewed version before production.",
+      title: brandMessaging.socialTitle,
+      description: brandMessaging.socialDescription,
       images: ["/og.png"],
     },
     robots: {

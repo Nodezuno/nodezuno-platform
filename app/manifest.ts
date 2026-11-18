@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
+import { brandMessaging } from "@/lib/brand-messaging";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Nodezuno",
     short_name: "Nodezuno",
-    description:
-      "Fixed-scope security reviews for smart contract and protocol releases across supported EVM and non-EVM ecosystems.",
+    description: brandMessaging.shortDescription,
     start_url: "/",
     display: "standalone",
     background_color: "#070908",

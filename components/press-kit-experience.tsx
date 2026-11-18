@@ -5,7 +5,7 @@ import type { CSSProperties } from "react";
 import { useState } from "react";
 
 const boilerplate =
-  "Nodezuno provides fixed-scope security reviews for planned smart contract and protocol releases that build on a version covered by a prior audit or professional security review. Every supported release review costs $7,500, whether the target is EVM or non-EVM, paid as a $3,750 scheduling deposit and a $3,750 final balance. Preparation, tools, and delivery timing adapt to the selected ecosystem. Every engagement compares the planned release with the reviewed version, tests material risks in a reproducible environment, and delivers prioritized findings plus a Proceed, Remediate, or Hold recommendation signed by the reviewer named in the order. Nodezuno does not hold keys, deploy customer code, replace a full audit, or let AI approve a release.";
+  "Nodezuno provides fixed-scope cybersecurity reviews for planned smart contract and protocol upgrades across supported EVM and non-EVM ecosystems. We compare the candidate release with the version covered by a prior audit or professional security review, test material risks introduced by the changes, and deliver prioritized findings, evidence where feasible, and a reviewer-signed Proceed, Remediate, or Hold recommendation. Every supported review costs $7,500, paid as a $3,750 scheduling deposit and a $3,750 final balance. Preparation, tools, and delivery timing adapt to the selected ecosystem. Nodezuno does not hold keys or deploy customer code, does not replace a full audit, and does not let AI approve a release.";
 
 const assets = [
   {
@@ -85,7 +85,7 @@ export function PressKitExperience() {
       <div className="press-facts">
         <div>
           <small>Category</small>
-          <strong>Smart contract and protocol release security reviews</strong>
+          <strong>Smart contract and protocol cybersecurity reviews</strong>
         </div>
         <div>
           <small>Stage</small>
