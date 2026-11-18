@@ -50,8 +50,9 @@ test("server-renders the focused release review homepage", async () => {
 
   const html = await response.text();
   const text = renderedText(html);
-  assert.match(text, /Your next upgrade\. Reviewed before release\./);
-  assert.match(text, /Your last audit covered the previous version/);
+  assert.match(text, /Cybersecurity for your next upgrade\. Know what changed before it ships\./);
+  assert.match(text, /Cybersecurity reviews for smart contract and protocol upgrades/);
+  assert.match(text, /version covered by a prior audit or security review/);
   assert.match(text, /5 business days target for a ready standard EVM review/);
   assert.match(text, /\$\s*7,500\s*USD/);
   assert.match(text, /Proceed, Remediate, or Hold/);

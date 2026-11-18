@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { brandMessaging } from "@/lib/brand-messaging";
 import { footerGroups } from "@/lib/site-data";
 import { Brand } from "./brand";
 import styles from "./site-footer.module.css";
@@ -11,10 +12,7 @@ export function SiteFooter() {
           <Link href="/" aria-label="Nodezuno home">
             <Brand />
           </Link>
-          <p>
-            Independent security reviews for the changes between your last
-            audit and your next smart contract or protocol release.
-          </p>
+          <p>{brandMessaging.shortDescription}</p>
           <div className="footer-availability">
             <Link href="/status">
               <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 20 20" width="16">
@@ -52,7 +50,7 @@ export function SiteFooter() {
         <div>
           <Link href="/legal">Legal overview</Link>
         </div>
-        <span>Security for the version you ship.</span>
+        <span>Cybersecurity for the version you ship.</span>
       </div>
     </footer>
   );

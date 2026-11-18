@@ -1,4 +1,5 @@
 import { legacyPublicAliases } from "./public-navigation.ts";
+import { brandMessaging } from "./brand-messaging.ts";
 import { reviewPolicy, reviewPriceLabels, reviewScopeSummary } from "./review-policy.ts";
 
 export type NavItem = {
@@ -64,9 +65,8 @@ const docsCta = {
 
 export const products: NavItem[] = [
   {
-    title: "Smart contract and protocol release security review",
-    description:
-      "Compare a planned release with the version covered by a prior audit or professional security review before production.",
+    title: "Cybersecurity review for smart contract and protocol upgrades",
+    description: brandMessaging.description,
     href: "/product",
     badge: "EVM + non-EVM",
     section: "Service",
@@ -287,10 +287,10 @@ export const footerGroups: NavGroup[] = [
 const productPages: DetailPageData[] = [
   {
     path: "product",
-    eyebrow: "Smart Contract and Protocol Release Review",
-    title: "Review the exact release your team plans to deploy.",
+    eyebrow: "Smart Contract and Protocol Cybersecurity",
+    title: "Cybersecurity review for the upgrade your team plans to ship.",
     intro:
-      "Nodezuno compares one planned release with the version covered by a prior audit or professional security review. We examine changed code, state, permissions, configuration, integrations, and the deployment or governance action, then test the highest-risk behavior and deliver findings, evidence, and a reviewer-signed release recommendation.",
+      "Nodezuno reviews one planned smart contract or protocol upgrade across supported EVM and non-EVM ecosystems. We compare the candidate release with the version covered by a prior audit or professional security review, assess material changes to code, state, permissions, configuration, integrations, and release actions, then test the highest-risk behavior. Your team receives prioritized findings, evidence where feasible, and a reviewer-signed Proceed, Remediate, or Hold recommendation.",
     kind: "product",
     accent: "lime",
     primaryCta: reviewCta,

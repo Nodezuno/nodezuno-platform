@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { brandMessaging } from "@/lib/brand-messaging";
 import { reviewPolicy, reviewPriceLabels } from "@/lib/review-policy";
 import { HomeFaq } from "./home-faq";
 import { ReleaseReviewPreview } from "./release-review-preview";
@@ -132,16 +133,20 @@ export function HomePage() {
           <div className={styles.heroCopy}>
             <div className={styles.eyebrow}>
               <span className={styles.pulse} aria-hidden="true" />
-              SMART CONTRACT + PROTOCOL RELEASE REVIEWS
+              {brandMessaging.tagline}
             </div>
             <h1 id="home-hero-title">
-              Your next upgrade.
-              <span>Reviewed before release.</span>
+              Cybersecurity for your next upgrade.
+              <span>Know what changed before it ships.</span>
             </h1>
             <p className={styles.heroLead}>
-              Your last audit covered the previous version. We review the
-              changes in your next smart contract or protocol release, so
-              your team can understand the risks before deploying.
+              Nodezuno provides independent cybersecurity reviews for planned
+              smart contract and protocol upgrades across supported EVM and
+              non-EVM blockchains. We compare your planned release with the
+              version covered by a prior audit or security review, then test
+              the changes that matter. Your team gets prioritized findings,
+              evidence where feasible, and a recommendation signed by the
+              reviewer: Proceed, Remediate, or Hold.
             </p>
             <div className={styles.heroActions}>
               <Link className={styles.primaryButton} href="/review/start">
